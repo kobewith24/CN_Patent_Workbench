@@ -1,0 +1,60 @@
+{"qid": "f01", "question": "如何实现翻板闸门在不同水位条件下自动开合，以确保水流顺畅且结构稳定？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510840464.8"], "answerable": true, "synthetic": true}
+{"qid": "f02", "question": "如何实现车载充气泵在有限空间内高效稳定地完成气流输送与压力调节？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520113156.0"], "answerable": true, "synthetic": true}
+{"qid": "f03", "question": "如何实现对槽型钢轨轨头纵向残余应力的高效、准确检测？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510958997.6"], "answerable": true, "synthetic": true}
+{"qid": "f04", "question": "如何实现LED屏背光亮度的平滑调节与节能控制？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520595891.X"], "answerable": true, "synthetic": true}
+{"qid": "f05", "question": "如何实现储钱罐上盖在打开后能够自动关闭，且在使用过程中保持稳定密封？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520795289.0"], "answerable": true, "synthetic": true}
+{"qid": "f06", "question": "如何实现贴标机转鼓在高速运行下仍能保持高精度贴标，且无需润滑和维护？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510743261.7"], "answerable": true, "synthetic": true}
+{"qid": "f07", "question": "如何在多晶硅锭的铸造过程中有效控制结晶生长的均匀性，以减少缺陷并提高产品纯度？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510052392.0"], "answerable": true, "synthetic": true}
+{"qid": "f08", "question": "如何实现光伏储能系统在不同负载条件下稳定输出电能，并有效提升能量利用效率？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510234524.1"], "answerable": true, "synthetic": true}
+{"qid": "f09", "question": "如何实现移位寄存器在高刷新率显示驱动中的稳定工作，以避免信号延迟和数据丢失？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510373239.8"], "answerable": true, "synthetic": true}
+{"qid": "f10", "question": "如何实现轧辊在高速运转过程中固定环的均匀受力与稳定连接？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520107296.7"], "answerable": true, "synthetic": true}
+{"qid": "f11", "question": "如何在矿井巷道支护中实现高效且稳定的气体充填，同时避免膏体在充填过程中发生流动或坍塌？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510701243.2"], "answerable": true, "synthetic": true}
+{"qid": "f12", "question": "如何实现马桶在提供取暖和按摩功能的同时，降低用水量并提高能源利用效率？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510998826.6"], "answerable": true, "synthetic": true}
+{"qid": "f13", "question": "如何实现气力式蔬菜播种机在保证种子均匀分布的同时，有效避免种子在输送过程中发生堵塞或偏移？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520557312.2"], "answerable": true, "synthetic": true}
+{"qid": "f14", "question": "如何实现卡爪在振动环境下稳定夹持工件且不易发生松脱？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520352400.9"], "answerable": true, "synthetic": true}
+{"qid": "f15", "question": "如何实现凝汽器清洗机器人在运行过程中对绞盘装置的平稳压紧与自动调节？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520836648.2"], "answerable": true, "synthetic": true}
+{"qid": "f16", "question": "如何在不更换变压器主体结构的情况下，实现其风冷系统的高效改造以提升散热性能？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510236272.6"], "answerable": true, "synthetic": true}
+{"qid": "f17", "question": "如何实现可穿戴设备与基站之间的高效无线配置，以确保连接稳定性和低功耗运行？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201580075321.0"], "answerable": true, "synthetic": true}
+{"qid": "f18", "question": "在焊接机器人操作中，如何实现焊枪在运动过程中与工件或周边结构发生碰撞时的自动限位与防撞保护？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520446411.3"], "answerable": true, "synthetic": true}
+{"qid": "f19", "question": "如何实现活性炭在废水处理过程中更高效地吸附污染物并提升整体处理效果？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510500830.5"], "answerable": true, "synthetic": true}
+{"qid": "f20", "question": "如何实现喷射混凝土过程中喷头的稳定喷射与物料均匀输送？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510892354.6"], "answerable": true, "synthetic": true}
+{"qid": "f21", "question": "如何实现对室内空气中甲醛的有效去除？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520442192.1"], "answerable": true, "synthetic": true}
+{"qid": "f22", "question": "如何实现格栅板在脱漆过程中有效去除表面漆层同时避免对基材造成损伤？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520365819.8"], "answerable": true, "synthetic": true}
+{"qid": "f23", "question": "如何实现椎板咬骨钳在不损伤椎体结构的前提下，实现完全可拆卸和精准定位的咬合操作？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520500411.7"], "answerable": true, "synthetic": true}
+{"qid": "f24", "question": "如何实现洗衣机在洗涤过程中降低能耗同时保持洗涤效果？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520685197.7"], "answerable": true, "synthetic": true}
+{"qid": "f25", "question": "如何设计具有高效抗凝血活性的双酰胺基卤代苯类化合物？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510084776.0"], "answerable": true, "synthetic": true}
+{"qid": "f26", "question": "如何实现螺丝和螺母在强腐蚀环境下的长期稳定连接？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201520220052.X"], "answerable": true, "synthetic": true}
+{"qid": "f27", "question": "如何实现压滤机滤板在频繁开合操作中的稳定握持与便捷操作？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510232796.8"], "answerable": true, "synthetic": true}
+{"qid": "f28", "question": "如何实现高效且安全地去除新生儿黄疸的药物配方？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510382208.9"], "answerable": true, "synthetic": true}
+{"qid": "f29", "question": "如何实现微波加热过程中设备的多方向灵活调节与稳定加热效果？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510459883.7"], "answerable": true, "synthetic": true}
+{"qid": "f30", "question": "如何实现一种集睡眠功能与日常使用于一体、且结构紧凑的床体设计？", "type": "factoid", "filters": {}, "gold_doc_ids": ["CN201510556844.9"], "answerable": true, "synthetic": true}
+{"qid": "c01", "question": "《一种自来水发电循环利用系统》与《灯泡贯流式机组技术供水的取水口结构》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201520156397.3", "CN201520686515.1"], "gold_titles": ["一种自来水发电循环利用系统", "灯泡贯流式机组技术供水的取水口结构"], "answerable": true, "synthetic": true}
+{"qid": "c02", "question": "《含可录音及播放音频吊坠的智能文胸》与《一种具有弹性背带的文胸》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201521088469.1", "CN201510988100.4"], "gold_titles": ["含可录音及播放音频吊坠的智能文胸", "一种具有弹性背带的文胸"], "answerable": true, "synthetic": true}
+{"qid": "c03", "question": "《穿水冷却装置及其罩盖结构》与《一种大型侧装料两辊冷轧管机的上料装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510946254.7", "CN201510410552.4"], "gold_titles": ["穿水冷却装置及其罩盖结构", "一种大型侧装料两辊冷轧管机的上料装置"], "answerable": true, "synthetic": true}
+{"qid": "c04", "question": "《一种天平仪底座》与《支脚称重传感器》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201520787851.5", "CN201520317410.9"], "gold_titles": ["一种天平仪底座", "支脚称重传感器"], "answerable": true, "synthetic": true}
+{"qid": "c05", "question": "《用于42CrMo钢齿轮双峰脉冲电流电化学复合机械光整加工的电解液》与《一种钛合金基体耐久性水下超疏油表面的制备方法》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510565041.X", "CN201510452954.0"], "gold_titles": ["用于42CrMo钢齿轮双峰脉冲电流电化学复合机械光整加工的电解液", "一种钛合金基体耐久性水下超疏油表面的制备方法"], "answerable": true, "synthetic": true}
+{"qid": "c06", "question": "《一种节水型取暖按摩式智能马桶》与《一种马桶排水阀控制机构》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510998826.6", "CN201521016037.X"], "gold_titles": ["一种节水型取暖按摩式智能马桶", "一种马桶排水阀控制机构"], "answerable": true, "synthetic": true}
+{"qid": "c07", "question": "《嵌入张紧力滑轮的汽车气门摇臂》与《柴油机凸轮轴减压机构》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510695133.X", "CN201510950456.9"], "gold_titles": ["嵌入张紧力滑轮的汽车气门摇臂", "柴油机凸轮轴减压机构"], "answerable": true, "synthetic": true}
+{"qid": "c08", "question": "《一种高效愈合薄板类锻件内部缺陷的锻造方法》与《变截面空心轴锻件挤压成型方法》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510073594.3", "CN201510513390.7"], "gold_titles": ["一种高效愈合薄板类锻件内部缺陷的锻造方法", "变截面空心轴锻件挤压成型方法"], "answerable": true, "synthetic": true}
+{"qid": "c09", "question": "《漆罐盖助力器》与《一种矿泉水桶装桶口密封装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201520261142.3", "CN201510850591.6"], "gold_titles": ["漆罐盖助力器", "一种矿泉水桶装桶口密封装置"], "answerable": true, "synthetic": true}
+{"qid": "c10", "question": "《涡旋加热器》与《一种利用水分子高频震荡的供热装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201721591341.6", "CN201821618879.6"], "gold_titles": ["涡旋加热器", "一种利用水分子高频震荡的供热装置"], "answerable": true, "synthetic": true}
+{"qid": "c11", "question": "《燃气轮机及其启动发电机结构》与《一种航空发动机燃油控制系统用起动排气装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510514599.5", "CN201510707839.3"], "gold_titles": ["燃气轮机及其启动发电机结构", "一种航空发动机燃油控制系统用起动排气装置"], "answerable": true, "synthetic": true}
+{"qid": "c12", "question": "《可拖曳可自动卸载的箱式垃圾载具装置》与《一种防臭回收装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201520860211.2", "CN201510866788.9"], "gold_titles": ["可拖曳可自动卸载的箱式垃圾载具装置", "一种防臭回收装置"], "answerable": true, "synthetic": true}
+{"qid": "c13", "question": "《一种环境友好型非离子表面活性剂润版液》与《一种无版缝砂银雪花全息版》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510403405.4", "CN201520823230.8"], "gold_titles": ["一种环境友好型非离子表面活性剂润版液", "一种无版缝砂银雪花全息版"], "answerable": true, "synthetic": true}
+{"qid": "c14", "question": "《一种导热阻燃窗帘》与《一种吸盘式窗帘固定器》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201520470570.7", "CN201520615556.1"], "gold_titles": ["一种导热阻燃窗帘", "一种吸盘式窗帘固定器"], "answerable": true, "synthetic": true}
+{"qid": "c15", "question": "《一种流道清砂刷》与《一种节能锅制造用脱模装置》在技术方案上的主要区别是什么？", "type": "comparison", "filters": {}, "gold_doc_ids": ["CN201510307076.3", "CN201510985067.X"], "gold_titles": ["一种流道清砂刷", "一种节能锅制造用脱模装置"], "answerable": true, "synthetic": true}
+{"qid": "u01", "question": "《一种基坑施工用洒水装置》的申请人名称是什么？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u02", "question": "《一种新型防爆全塑操作柱》是否发生过专利诉讼？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u03", "question": "《一种建筑屋顶太阳能板用集光装置》目前的法律状态是授权还是失效？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u04", "question": "《一种速冻水饺自动生产线》的申请人名称是什么？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u05", "question": "《一种基于海砂淡化的处理工艺》是否发生过专利诉讼？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u06", "question": "《一种可用于大输入共模范围与负压比较的比较器电路》目前的法律状态是授权还是失效？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u07", "question": "《一维纱线基可拉伸汗液激活电池编织机及编织方法》的申请人名称是什么？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u08", "question": "《一种提升大型变压器抗震性能的加固方法及大型变压器》是否发生过专利诉讼？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u09", "question": "《一种伪基站的检测装置》目前的法律状态是授权还是失效？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u10", "question": "《一种防异味的组件式橱柜》的申请人名称是什么？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u11", "question": "《一种二次结构中电气管线预埋系统及实施方法》是否发生过专利诉讼？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u12", "question": "《一种用于玻璃粉为原料混凝土的聚合物及其制备方法》目前的法律状态是授权还是失效？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u13", "question": "《车辆越障辅助装置》的申请人名称是什么？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u14", "question": "《一种扦插自动化环割器》是否发生过专利诉讼？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
+{"qid": "u15", "question": "《一种内置流道式闭锁阻尼器》目前的法律状态是授权还是失效？", "type": "unanswerable", "filters": {}, "gold_doc_ids": [], "answerable": false, "synthetic": true}
