@@ -115,9 +115,16 @@ python -m uvicorn service.app:app --host 127.0.0.1 --port 8001
 
 > 合成题只由标题生成，同主题近邻专利无法区分，单 gold recall 是下界；未做人工校验，`faithfulness` 由同模型判定，仅作相对参考。答案侧仅 18 题，方差大（60 题子集为 0.868）。
 
+## 数据获取
+
+仓库不包含数据和索引。从 Hugging Face 下载
+[520,634 Chinese Patents Dataset](https://huggingface.co/datasets/LiuHongwei1992/520634PatentsDataset)
+的 `patents_sample_500k.csv`，放到 `data/raw/patents_sample_500k.csv`，再执行下面的清洗与建索引。
+
 ## 复现
 
 ```powershell
+# 0) 下载 CSV 到 data/raw/（见上）
 # 1) 清洗
 python scripts/clean_patents.py
 
@@ -127,9 +134,9 @@ python scripts/build_index.py --limit 2000
 # 3) 全量建索引（约 60–75 分钟）
 python scripts/build_index.py
 
-# 4) 评测
-python eval/build_eval.py
-python eval/run_eval.py --answer-n 18
+# 4) 评测 150 题
+python eval/build_eval.py --factoid 60 --compare 50 --unans 40 --out eval/gold_150.jsonl
+python eval/run_eval.py --gold eval/gold_150.jsonl --answer-n 18 --tag 150
 ```
 
 ## 设计要点
