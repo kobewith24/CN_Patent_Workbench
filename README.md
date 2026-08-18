@@ -149,4 +149,4 @@ python eval/run_eval.py --gold eval/gold_150.jsonl --answer-n 18 --tag 150
 
 ## 硬件
 
-RTX 4060 Laptop 8GB / 16GB RAM。BGE-M3 索引约 2.1GB，编码约 50–65 分钟；服务常驻显存与现有 BGE-M3 + reranker + Qwen3-4B 方案一致（约 7GB）。
+RTX 4060 Laptop 8GB / 16GB RAM。BGE-M3 索引约 2.1GB，编码约 50–65 分钟；服务常驻显存约 7GB（BGE-M3 + reranker + Qwen3-4B）。
