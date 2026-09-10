@@ -2,22 +2,26 @@
 
 面向中文专利技术情报的检索增强问答（RAG）。单语料、单索引：52 万件专利摘要 → BGE-M3 稠密索引 → 查询规划/元数据过滤 → 多步检索 → 带专利号引用的生成。
 
-## 当前进度
+## 工作流程
 
-- [x] 原始数据下载：`data/raw/patents_sample_500k.csv`（448 MB）
-- [x] 清洗：`data/clean/patents.jsonl`（519,424 条）
-- [x] 数据审计：广告短语残留 0；正常词“马克笔/托卡马克/马克思主义”保留
-- [x] 全量 BGE-M3 索引：519,424 条，2.17 GB，73.9 分钟（编码 64.8 min + HNSW 8.9 min）
-- [x] Top-k sanity：纯向量检索 21–30 ms（warm），相关专利排前
-- [x] 检索服务：`/retrieve`，BGE-M3 + IPC/年份/类型/城市过滤 + GPU reranker 精排
-- [x] 生成服务：`/answer`，Qwen3-4B 带 `[n]` 引用；对比题自动拆 1–3 个子查询
-- [x] 引用校验：Qwen3 逐条判定 + reranker 兜底，返回 `claims` / `faithfulness`
-- [x] 150 题合成评测：factoid recall@5 0.850、comparison all@5 0.860、faithfulness 0.606、拒答 1.000
-- [x] Web UI：`http://127.0.0.1:8001/`
-- [x] 消融：rerank +6.7 pt、标题 bigram +3.3 pt、多步 faithfulness +5 pt、校验约 +1.5 s/题
-- [x] 请求级 trace：`/trace/{trace_id}`；SSE 流式：`/answer_stream`
-- [x] 150 题合成评测集（60 factoid + 50 comparison + 40 unanswerable）
-- [ ] judge 校准 / 回归脚本
+```
+原始 CSV
+  → 清洗/去重（推广语、空摘要、重复申请号）
+  → 单一 BGE-M3 稠密索引（HNSW）
+  → 查询解析（多轮改写 / 对比题拆子查询 / 元数据过滤）
+  → 检索（dense 召回 + IPC/年份/类型/城市过滤 + bge-reranker 精排）
+  → Qwen3-4B 生成（结论 + [n] 引用）
+  → 逐句引用校验（Qwen3 判定 + reranker 兜底）
+  → Web / SSE 输出（可查 trace）
+```
+
+1. **数据**：52 万件专利摘要，清洗后 519,424 条；处理推广语、空摘要、重复申请号。
+2. **索引**：只建一套 BGE-M3 1024 维索引，HNSW 检索。
+3. **查询**：多轮改写；对比题拆 1–3 个子查询；从问题里抽 IPC/年份/类型/城市过滤条件。
+4. **检索**：过滤 + dense 召回 + reranker 精排，返回带专利号/摘要的证据。
+5. **生成**：Qwen3-4B 按“结论 / 明确相关 / 证据不充分”结构输出，正文只写 `[n]`。
+6. **校验**：逐句判断引用摘要是否支撑结论，低支撑标记；整体不可信时拒答。
+7. **评测**：150 题合成集，覆盖检索命中、引用命中、忠实度、拒答率与延迟。
 
 ## 数据
 
