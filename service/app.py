@@ -63,6 +63,16 @@ class RetrieveResponse(BaseModel):
     hits: list
 
 
+class VerifyRequest(BaseModel):
+    answer: str
+    sources: list
+
+
+class VerifyResponse(BaseModel):
+    claims: list
+    faithfulness: float
+
+
 class AnswerResponse(BaseModel):
     trace_id: str
     query: str
@@ -489,6 +499,73 @@ def retrieve(
         elapsed_ms=round((time.time() - t0) * 1000, 1),
         hits=hits,
     )
+
+
+@app.get("/retrieve_plan", response_model=RetrieveResponse)
+def retrieve_plan(
+    q: str = Query(..., min_length=1),
+    k: int = Query(5, ge=1, le=50),
+    candidates: int = Query(50, ge=1, le=500),
+    ipc_section: str = Query(""),
+    ipc_subclass: str = Query(""),
+    year_from: int = Query(0),
+    year_to: int = Query(0),
+    patent_type: str = Query(""),
+    city: str = Query(""),
+    applicant_type: str = Query(""),
+):
+    subs = _plan(q)
+    if len(subs) <= 1:
+        return retrieve(q=q, k=k, candidates=candidates, ipc_section=ipc_section,
+                        ipc_subclass=ipc_subclass, year_from=year_from,
+                        year_to=year_to, patent_type=patent_type, city=city,
+                        applicant_type=applicant_type)
+
+    t0 = time.time()
+    per_k = max(2, (k + 1) // 2)
+    merged = {}
+    filters = {}
+    scanned = 0
+    for sq in subs:
+        rr = retrieve(q=sq, k=per_k, candidates=candidates,
+                      ipc_section=ipc_section, ipc_subclass=ipc_subclass,
+                      year_from=year_from, year_to=year_to,
+                      patent_type=patent_type, city=city,
+                      applicant_type=applicant_type)
+        filters = rr.filters
+        scanned += rr.scanned
+        for h in rr.hits:
+            if h.doc_id not in merged or h.score > merged[h.doc_id].score:
+                merged[h.doc_id] = h
+
+    hits = sorted(merged.values(), key=lambda h: h.score, reverse=True)[:k]
+    for i, h in enumerate(hits, 1):
+        h.rank = i
+    return RetrieveResponse(
+        query=q,
+        filters=filters,
+        scanned=scanned,
+        elapsed_ms=round((time.time() - t0) * 1000, 1),
+        hits=hits,
+    )
+
+
+@app.post("/verify", response_model=VerifyResponse)
+def verify(req: VerifyRequest):
+    hits = []
+    for s in req.sources:
+        if not isinstance(s, dict):
+            continue
+        try:
+            hits.append(Hit(**s))
+        except Exception:  # noqa: BLE001
+            continue
+    if not hits:
+        return VerifyResponse(claims=[], faithfulness=-1.0)
+    claims = _verify_answer(req.answer, hits)
+    supported = sum(1 for c in claims if c["supported"])
+    faithfulness = round(supported / len(claims), 4) if claims else -1.0
+    return VerifyResponse(claims=claims, faithfulness=faithfulness)
 
 
 def _write_trace(payload):

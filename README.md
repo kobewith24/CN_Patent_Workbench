@@ -1,27 +1,39 @@
 # CN_Patent_RAG
 
-面向中文专利技术情报的检索增强问答（RAG）。单语料、单索引：52 万件专利摘要 → BGE-M3 稠密索引 → 查询规划/元数据过滤 → 多步检索 → 带专利号引用的生成。
+面向中文专利技术情报的检索增强问答（RAG）。52 万件专利摘要 → BGE-M3 向量索引 → Spring Boot + LangChain4j 应用层 → 检索、过滤、流式生成与引用校验。
+
+## 架构
+
+```
+浏览器
+  → Spring Boot 3.5 + LangChain4j（8080）
+      ├─ ChatMemory 多轮会话
+      ├─ ChatModel 查询改写
+      ├─ 调 Python /retrieve
+      ├─ Ollama 流式生成
+      ├─ 调 Python /verify
+      └─ SSE：sources → token* → verify → done
+  → Python FastAPI（8001）：BGE-M3 + bge-reranker + /verify
+```
 
 ## 工作流程
 
-```
-原始 CSV
-  → 清洗/去重（推广语、空摘要、重复申请号）
-  → 单一 BGE-M3 稠密索引（HNSW）
-  → 查询解析（多轮改写 / 对比题拆子查询 / 元数据过滤）
-  → 检索（dense 召回 + IPC/年份/类型/城市过滤 + bge-reranker 精排）
-  → Qwen3-4B 生成（结论 + [n] 引用）
-  → 逐句引用校验（Qwen3 判定 + reranker 兜底）
-  → Web / SSE 输出（可查 trace）
-```
-
 1. **数据**：52 万件专利摘要，清洗后 519,424 条；处理推广语、空摘要、重复申请号。
-2. **索引**：只建一套 BGE-M3 1024 维索引，HNSW 检索。
-3. **查询**：多轮改写；对比题拆 1–3 个子查询；从问题里抽 IPC/年份/类型/城市过滤条件。
-4. **检索**：过滤 + dense 召回 + reranker 精排，返回带专利号/摘要的证据。
-5. **生成**：Qwen3-4B 按“结论 / 明确相关 / 证据不充分”结构输出，正文只写 `[n]`。
-6. **校验**：逐句判断引用摘要是否支撑结论，低支撑标记；整体不可信时拒答。
+2. **索引**：构建 BGE-M3 1024 维向量索引，HNSW 检索。
+3. **应用层**：Spring Boot + LangChain4j 负责会话记忆、查询改写、上下文组装、流式生成与 SSE。
+4. **检索**：Python 侧按 IPC/年份/类型/城市过滤，向量召回 + bge-reranker 精排，返回带专利号/摘要的证据。
+5. **生成**：LangChain4j `AiServices` 编排 Ollama 流式生成，按“结论 / 明确相关 / 证据不充分”结构输出，正文只写 `[n]`。
+6. **校验**：生成结束后调用 Python `/verify`，逐句判断引用摘要是否支撑结论，低支撑标记；整体不可信时拒答。
 7. **评测**：150 题合成集，覆盖检索命中、引用命中、忠实度、拒答率与延迟。
+
+## LangChain4j 用法
+
+- `AiServices` + `PatentAssistant` 声明式定义流式对话接口；
+- `ChatMemoryProvider` 按 `sessionId` 复用 `MessageWindowChatMemory`，支持多轮；
+- `ChatModel` 做追问的查询改写；
+- `OllamaStreamingChatModel` + `TokenStream` 逐 token 生成；
+- `SseEmitter` 推送 `sources`、`token`、`verify`、`done`；
+- Python `/retrieve`、`/verify` 作为检索与校验微服务。
 
 ## 数据
 
@@ -61,9 +73,12 @@ CN_Patent_RAG/
 │  ├─ check_clean.py          # 广告残留审计
 │  ├─ build_meta.py           # 紧凑元数据
 │  └─ build_index.py          # BGE-M3 编码 + HNSW
+├─ rag-app/
+│  ├─ pom.xml                 # Spring Boot 3.5 + LangChain4j 1.23
+│  └─ src/main/java/...       # AiServices / ChatMemory / SSE
 ├─ service/
-│  ├─ app.py                  # FastAPI：/retrieve /answer /
-│  └─ static/index.html       # Web 问答页
+│  ├─ app.py                  # FastAPI：/retrieve /verify
+│  └─ static/index.html       # 旧版 Python 问答页
 ├─ eval/
 │  ├─ build_eval.py           # 60/150 题生成
 │  ├─ run_eval.py             # 检索 + 答案评测（支持消融）
@@ -86,22 +101,40 @@ pip install -r requirements.txt
 
 ## 运行服务
 
+| 模块 | 端口 | 说明 |
+|---|---|---|
+| `rag-app` | 8080 | Spring Boot 3.5 + LangChain4j 应用层，Web/SSE |
+| `retrieval` | 8001 | Python FastAPI，BGE-M3 + bge-reranker + `/verify` |
+| Ollama | 11434 | Qwen3 生成 |
+
+### 1. Python 检索服务
+
 ```powershell
 cd D:\Projects\CN_Patent_RAG
 python -m uvicorn service.app:app --host 127.0.0.1 --port 8001
-# 浏览器打开 http://127.0.0.1:8001/
+```
+
+### 2. Java 应用层
+
+需要 JDK 21 + Maven。
+
+```powershell
+cd D:\Projects\CN_Patent_RAG\rag-app
+mvn -DskipTests package
+java -jar target\rag-app-1.0.0.jar
+# 浏览器打开 http://127.0.0.1:8080/
 ```
 
 接口：
 
-| 接口 | 说明 |
-|---|---|
-| `GET /` | Web 问答页（过滤条件 / 答案 / 引用卡片 / 支撑校验） |
-| `GET /retrieve?q=...&k=5&ipc_section=G&year_from=2020` | 检索 + 过滤 + rerank |
-| `GET /answer?q=...&k=5&...` | 检索 + 生成 + 逐句校验 |
-| `GET /answer_stream?q=...` | SSE：`meta` → `token`* → `verify` → `done` |
-| `GET /trace/{trace_id}` | 请求级 trace JSON（查询/候选/答案/claims/耗时） |
-| `GET /health` | 健康检查 |
+| 服务 | 接口 | 说明 |
+|---|---|---|
+| Java | `GET /` | Web 问答页（过滤 / 答案 / 引用 / 支撑校验） |
+| Java | `GET /api/chat?q=...&sessionId=...` | SSE：`sources` → `token`* → `verify` → `done` |
+| Java | `GET /api/health` | 健康检查 |
+| Python | `GET /retrieve?q=...` | 检索 + 过滤 + rerank |
+| Python | `POST /verify` | 逐句引用校验 |
+| Python | `GET /answer`、`/answer_stream` | 兼容旧链路 / 直接流式 |
 
 ## 评测基线（150 题合成集，不做人工校验）
 
