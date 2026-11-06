@@ -18,7 +18,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from .retrieval import EMPTY_FILTERS, Retriever
-from .verify import build_claims, judge_llm, summarize
+from .verify import audit_claims, build_claims
 
 ROOT = r"D:\Projects\CN_Patent_RAG"
 INDEX_PATH = os.path.join(ROOT, "data", "index", "patent_index_1024.bin")
@@ -72,6 +72,9 @@ class VerifyResponse(BaseModel):
     faithfulness: float
     citation_coverage: float = -1.0
     unsupported_rate: float = -1.0
+    numeric_unsupported_rate: float = -1.0
+    term_coverage: float = -1.0
+    meta_rate: float = -1.0
 
 
 class AnswerResponse(BaseModel):
@@ -173,18 +176,20 @@ def _build_prompt(q, hits, sub_queries=None, filters=None):
 
 
 def _verify_text(text, hits):
-    """v2: every sentence is a claim; uncited sentences count as unsupported."""
-    by_rank = {h.rank: {"abstract": h.abstract} for h in hits}
-    claims = judge_llm(build_claims(text, len(hits)), by_rank)
+    """Evidence audit: numbers and technical terms must appear in the cited abstracts."""
+    by_rank = {h.rank: h.abstract for h in hits}
+    claims, stats = audit_claims(build_claims(text, len(hits)), by_rank)
     out = [{
         "sentence": c["sentence"],
         "refs": c["refs"],
-        "support": c.get("score", 0.0),
-        "supported": c["supported"],
-        "verified_by": c.get("by", "llm"),
+        "support": 1.0 if c["grounded"] else 0.0,
+        "supported": c["grounded"],
+        "verified_by": "audit",
         "reason": c.get("reason", ""),
+        "numbers_missing": c.get("numbers_missing", []),
+        "term_coverage": c.get("term_coverage", 0.0),
     } for c in claims]
-    return out, summarize(claims)
+    return out, stats
 
 
 
@@ -342,9 +347,12 @@ def verify(req: VerifyRequest):
     if not hits:
         return VerifyResponse(claims=[], faithfulness=-1.0)
     claims, stats = _verify_text(req.answer, hits)
-    return VerifyResponse(claims=claims, faithfulness=stats["support_rate"],
+    return VerifyResponse(claims=claims, faithfulness=stats["grounded_rate"],
                           citation_coverage=stats["citation_coverage"],
-                          unsupported_rate=stats["unsupported_rate"])
+                          unsupported_rate=stats["unsupported_rate"],
+                          numeric_unsupported_rate=stats["numeric_unsupported_rate"],
+                          term_coverage=stats["term_coverage"],
+                          meta_rate=stats["meta_rate"])
 
 
 def _write_trace(payload):
@@ -458,7 +466,7 @@ def answer(
     uncited = [h.rank for h in hits if h.rank not in cited]
 
     claims, vstats = _verify_text(text, hits) if use_verify else ([], None)
-    faithfulness = vstats["support_rate"] if vstats else -1.0
+    faithfulness = vstats["grounded_rate"] if vstats else -1.0
 
     elapsed = round((time.time() - t0) * 1000, 1)
     _write_trace({
@@ -574,7 +582,7 @@ def answer_stream(
             return
 
         claims, vstats = _verify_text(text, hits)
-        faithfulness = vstats["support_rate"] if vstats else -1.0
+        faithfulness = vstats["grounded_rate"] if vstats else -1.0
         cited = sorted({int(x) for x in re.findall(r"\[(\d+)\]", text)
                         if 1 <= int(x) <= len(hits)})
         uncited = [h.rank for h in hits if h.rank not in cited]

@@ -13,6 +13,7 @@ Metrics:
 """
 import json
 import re
+import unicodedata
 
 import requests
 
@@ -181,3 +182,107 @@ def summarize(claims):
         "unsupported_rate": round(1 - len(supported) / total, 4) if total else 1.0,
         "faithfulness_v1": round(len(supported_cited) / len(cited), 4) if cited else 0.0,
     }
+
+
+# ---------------- evidence audit (no semantic judgement) ----------------
+
+META_PAT = re.compile(
+    r"未涉及|不涉及|未公开|未提及|未披露|未说明|未明确|未给出|未记载|未提供|"
+    r"关联性不足|关联性较弱|相关性不足|证据不充分|证据不足|资料不足|"
+    r"无法回答|无法判断|无法支持|不足以|不属于|缺乏|没有相关|（注|\(注")
+_SECTION = re.compile(r"^(结论|明确相关的专利|相关但证据不充分的专利)\s*[：:]\s*")
+_LEAD = re.compile(r"^[\s\-\u2013\u2014\u2022\u00b7\*\d]+[、.．)）]?\s*")
+_NUM = re.compile(r"\d+(?:\.\d+)?%?")
+_CJK = re.compile(r"[\u4e00-\u9fff]")
+
+GENERIC_TERMS = frozenset("""
+方法 装置 系统 结构 技术 问题 方案 效果 优点 结论 专利 摘要 装置 设备 包括 通过 进行 采用 实现 提供
+具有 能够 可以 以及 并且 同时 此外 因此 从而 使得 需要 主要 相关 具体 一种 本发明 本实用新型 一些 部分
+""".split())
+
+
+def _norm(s):
+    s = unicodedata.normalize("NFKC", s or "")
+    for a, b in (("～", "-"), ("~", "-"), ("—", "-"), ("–", "-"), ("％", "%")):
+        s = s.replace(a, b)
+    return s
+
+
+def _strip(s):
+    s = _SECTION.sub("", (s or "").strip())
+    return _LEAD.sub("", s).strip()
+
+
+def extract_numbers(text):
+    s = _norm(text)
+    # strip IPC codes, patent-ish identifiers and letter-hyphen-number names (Tween-20, DC53)
+    s = re.sub(r"[A-H]\d{2}[A-Z]\s*\d+/\d+", " ", s)
+    s = re.sub(r"[A-Za-z]+\s*[-\u2013]\s*\d+", " ", s)
+    out = []
+    for m in _NUM.finditer(s):
+        v = m.group(0)
+        if v.endswith("%"):
+            out.append(v)
+            continue
+        try:
+            f = float(v)
+        except ValueError:
+            continue
+        if f.is_integer() and (0 <= f <= 10 or 1900 <= f <= 2100):
+            continue
+        out.append(v)
+    return out
+
+
+def content_terms(text):
+    from .text import tokenize
+    return [t for t in tokenize(text, ngrams=(), max_tokens=60)
+            if len(t) >= 2 and not t.isdigit() and t not in GENERIC_TERMS and _CJK.search(t)]
+
+
+def check_claim(clean, abstracts):
+    """Mechanical grounding check for one claim against its cited abstracts."""
+    text = _strip(_norm(clean))
+    if not abstracts:
+        return {"meta": False, "numbers": [], "numbers_missing": [], "term_coverage": 0.0,
+                "grounded": False, "reason": "no_citation"}
+    if META_PAT.search(text):
+        return {"meta": True, "numbers": [], "numbers_missing": [], "term_coverage": 1.0,
+                "grounded": False, "reason": "meta"}
+
+    ref = _norm(" ".join(abstracts))
+    nums = extract_numbers(text)
+    ref_nums = set(extract_numbers(ref))
+    missing = [n for n in nums if n not in ref_nums]
+
+    terms = content_terms(text)
+    hit = [t for t in terms if t in ref]
+    cov = len(hit) / len(terms) if terms else 1.0
+    grounded = (not missing) and cov >= 0.6
+    return {"meta": False, "numbers": nums, "numbers_missing": missing,
+            "term_coverage": round(cov, 4), "grounded": grounded,
+            "reason": "ok" if grounded else ("number" if missing else "term")}
+
+
+def audit_claims(claims, abstracts_by_rank):
+    rows = []
+    for c in claims:
+        abstracts = [abstracts_by_rank[r] for r in c["refs"] if r in abstracts_by_rank]
+        res = check_claim(c["clean"], abstracts)
+        row = dict(c)
+        row.update(res)
+        rows.append(row)
+
+    body = [r for r in rows if not r["meta"]]
+    cited = [r for r in body if r["refs"]]
+    num = [r for r in cited if r["numbers"]]
+    summary = {
+        "claims": len(rows),
+        "meta_rate": round(1 - len(body) / len(rows), 4) if rows else 0.0,
+        "citation_coverage": round(len(cited) / len(body), 4) if body else 0.0,
+        "numeric_checked": len(num),
+        "numeric_unsupported_rate": round(sum(1 for r in num if r["numbers_missing"]) / len(num), 4) if num else 0.0,
+        "term_coverage": round(sum(r["term_coverage"] for r in cited) / len(cited), 4) if cited else 0.0,
+        "grounded_rate": round(sum(1 for r in body if r["grounded"]) / len(body), 4) if body else 0.0,
+    }
+    return rows, summary
