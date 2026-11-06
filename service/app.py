@@ -321,7 +321,7 @@ def health():
 def retrieve(
     q: str = Query(..., min_length=1),
     k: int = Query(5, ge=1, le=50),
-    candidates: int = Query(50, ge=1, le=500),
+    candidates: int = Query(100, ge=1, le=500),
     ipc_section: str = Query(""),
     ipc_subclass: str = Query(""),
     year_from: int = Query(0),
@@ -369,7 +369,7 @@ def retrieve(
 def retrieve_plan(
     q: str = Query(..., min_length=1),
     k: int = Query(5, ge=1, le=50),
-    candidates: int = Query(50, ge=1, le=500),
+    candidates: int = Query(100, ge=1, le=500),
     ipc_section: str = Query(""),
     ipc_subclass: str = Query(""),
     year_from: int = Query(0),

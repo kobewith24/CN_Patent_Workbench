@@ -1,0 +1,130 @@
+{
+  "depths": [
+    50,
+    100,
+    200
+  ],
+  "n": 30,
+  "summary": {
+    "hybrid@50": {
+      "R@5": 0.7667,
+      "R@10": 0.8667,
+      "MRR": 0.6295,
+      "median_ms": 1003.5,
+      "p95_ms": 1380.7
+    },
+    "hybrid_rerank@50": {
+      "R@5": 0.7333,
+      "R@10": 0.8,
+      "MRR": 0.6769,
+      "median_ms": 1590.6,
+      "p95_ms": 1818.9
+    },
+    "hybrid@100": {
+      "R@5": 0.8,
+      "R@10": 0.9,
+      "MRR": 0.6356,
+      "median_ms": 954.5,
+      "p95_ms": 1216.8
+    },
+    "hybrid_rerank@100": {
+      "R@5": 0.7333,
+      "R@10": 0.8333,
+      "MRR": 0.6785,
+      "median_ms": 1999.4,
+      "p95_ms": 2354.1
+    },
+    "hybrid@200": {
+      "R@5": 0.7667,
+      "R@10": 0.8667,
+      "MRR": 0.6287,
+      "median_ms": 939.6,
+      "p95_ms": 1210.8
+    },
+    "hybrid_rerank@200": {
+      "R@5": 0.7333,
+      "R@10": 0.8,
+      "MRR": 0.672,
+      "median_ms": 2919.9,
+      "p95_ms": 3256.8
+    }
+  },
+  "vs_hybrid@50": {
+    "hybrid@50": {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "hybrid_rerank@50": {
+      "delta": -0.0333,
+      "ci95": [
+        -0.1333,
+        0.0667
+      ]
+    },
+    "hybrid@100": {
+      "delta": 0.0333,
+      "ci95": [
+        0.0,
+        0.1
+      ]
+    },
+    "hybrid_rerank@100": {
+      "delta": -0.0333,
+      "ci95": [
+        -0.1333,
+        0.0667
+      ]
+    },
+    "hybrid@200": {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "hybrid_rerank@200": {
+      "delta": -0.0333,
+      "ci95": [
+        -0.1333,
+        0.0667
+      ]
+    }
+  },
+  "watch_cases": {
+    "f09": {
+      "hybrid@50": 5,
+      "hybrid_rerank@50": 9,
+      "hybrid@100": 5,
+      "hybrid_rerank@100": 9,
+      "hybrid@200": 5,
+      "hybrid_rerank@200": 9
+    },
+    "f14": {
+      "hybrid@50": null,
+      "hybrid_rerank@50": null,
+      "hybrid@100": 4,
+      "hybrid_rerank@100": 10,
+      "hybrid@200": 7,
+      "hybrid_rerank@200": null
+    },
+    "f21": {
+      "hybrid@50": null,
+      "hybrid_rerank@50": null,
+      "hybrid@100": null,
+      "hybrid_rerank@100": null,
+      "hybrid@200": null,
+      "hybrid_rerank@200": null
+    },
+    "f25": {
+      "hybrid@50": 6,
+      "hybrid_rerank@50": 1,
+      "hybrid@100": 10,
+      "hybrid_rerank@100": 1,
+      "hybrid@200": null,
+      "hybrid_rerank@200": 1
+    }
+  }
+}
