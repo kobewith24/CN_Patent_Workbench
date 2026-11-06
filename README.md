@@ -1,189 +1,174 @@
-# CN_Patent_RAG
+# 面向专利技术情报的检索增强问答与引用审计
 
-面向中文专利技术情报的检索增强问答（RAG）。52 万件专利摘要 → BGE-M3 向量索引 → Spring Boot + LangChain4j 应用层 → 检索、过滤、流式生成与引用校验。
+52 万件中文专利摘要 → BM25 + 向量混合检索 → Qwen3-4B 生成 → 逐句引用 + 证据审计。
+
+这个仓库的定位是**把检索和度量做扎实**，不是再包一个聊天框。所有对外数字都标了口径和样本量，测不出来的东西不写。
+
+## 关键数字
+
+| 指标 | 值 | 口径 |
+|---|---:|---|
+| hybrid + rerank recall@5 | **0.887** | 240 题，多选题 gold |
+| 相对纯向量提升 | **+24.6pt** | 95% CI [+0.188, +0.308] |
+| 引用覆盖率 | **0.542** | 60 条答案、424 句 |
+| 数值无出处率 | **0.046** | 22 条含数值的已引用结论 |
+| 窄过滤空结果率 | **0**（旧 41%） | 城市+年份，40 题 |
+| 单路生成延迟 | 7.2 s / TTFT 1.7 s | 4060 Laptop 8GB |
 
 ## 架构
 
 ```
 浏览器
   → Spring Boot 3.5 + LangChain4j（8080）
-      ├─ ChatMemory 多轮会话
-      ├─ ChatModel 查询改写
-      ├─ 调 Python /retrieve
-      ├─ Ollama 流式生成
-      ├─ 调 Python /verify
-      └─ SSE：sources → token* → verify → done
-  → Python FastAPI（8001）：BGE-M3 + bge-reranker + /verify
+      ├─ ChatMemory 多轮 / 查询改写
+      ├─ 调 Python /retrieve（BM25 + dense + RRF + rerank + 过滤）
+      ├─ Ollama 流式生成（Qwen3-4B q4）
+      └─ 调 Python /verify（证据审计）
+  → Python FastAPI（8001）：检索、审计、指标
 ```
-
-## 工作流程
-
-1. **数据**：52 万件专利摘要，清洗后 519,424 条；处理推广语、空摘要、重复申请号。
-2. **索引**：构建 BGE-M3 1024 维向量索引，HNSW 检索。
-3. **应用层**：Spring Boot + LangChain4j 负责会话记忆、查询改写、上下文组装、流式生成与 SSE。
-4. **检索**：Python 侧按 IPC/年份/类型/城市过滤，向量召回 + bge-reranker 精排，返回带专利号/摘要的证据。
-5. **生成**：LangChain4j `AiServices` 编排 Ollama 流式生成，按“结论 / 明确相关 / 证据不充分”结构输出，正文只写 `[n]`。
-6. **校验**：生成结束后调用 Python `/verify`，逐句判断引用摘要是否支撑结论，低支撑标记；整体不可信时拒答。
-7. **评测**：150 题合成集，覆盖检索命中、引用命中、忠实度、拒答率与延迟。
-
-## LangChain4j 用法
-
-- `AiServices` + `PatentAssistant` 声明式定义流式对话接口；
-- `ChatMemoryProvider` 按 `sessionId` 复用 `MessageWindowChatMemory`，支持多轮；
-- `ChatModel` 做追问的查询改写；
-- `OllamaStreamingChatModel` + `TokenStream` 逐 token 生成；
-- `SseEmitter` 推送 `sources`、`token`、`verify`、`done`；
-- Python `/retrieve`、`/verify` 作为检索与校验微服务。
 
 ## 数据
 
 | 项 | 数值 |
 |---|---|
-| 原始行数 | 520,634 |
-| 清洗后 | 519,424 |
-| 丢弃 | 空标题 1、摘要过短 11、重复申请号 1,198 |
-| 含广告并已清洗 | 155,962 行 |
+| 原始 / 清洗后 | 520,634 / 519,424 |
 | 年份 | 2015–2024 |
-| 摘要长度 | 均值 260.9，P50 278，P95 304，最大 720 |
+| 摘要长度 | 均值 260.9，P95 304，最大 720 |
 | 专利类型 | 实用新型 251,326；发明申请 211,739；发明授权 56,359 |
 | IPC 缺失 | 20,585（约 4%） |
-| 申请人类型 | 企业 385,955；学校 61,194；个人 47,466；科研 14,535；机关 9,895 |
 
-**已知边界：**
+**只有摘要，没有权利要求、说明书、申请人名称。** 所以“保护范围 / 侵权 / 某公司专利布局”这类问题不可答，这不是模型问题，是数据边界。
 
-- 数据集**没有申请人名称**，只有申请人类型/城市；“某公司的专利布局”类问题不可答。
-- **只有摘要，没有权利要求/说明书**；“保护范围/侵权”类问题不可答。
-- 摘要里混有数据商推广语（“马克数据网”等），已用正则清洗；正常词“马克笔/托卡马克/马克思主义/马克隆值”等保留。
-- README 声称 1985–2024，HF 统计接口显示实际只有 **2015–2024**。
+## 检索
 
-字段：`doc_id`（申请号）、`title`、`abstract`、`patent_type`、`ipc_main`、`ipc_section`、`ipc_subclass`、`year`、`applicant_types`、`applicant_type`、`city`、`text`、`abstract_len`、`text_len`。
+三层：稀疏 + 稠密 + 重排。
 
-## 目录
+- **稀疏**：SQLite FTS5 上建 BM25（磁盘索引 1.08GB）。分词是 jieba 搜索模式 + 中文 2/3-gram + 英文数字整串保留——`FXa`、`G06T` 这类不会被切碎，`双酰胺基` 这种词也能被 2-gram 兜住。
+- **稠密**：BGE-M3 1024 维，hnswlib HNSW（2.1GB）。
+- **融合**：RRF(k=60)，两路各取 top-100。
+- **重排**：bge-reranker-v2-m3，融合后取 100 条候选。
+- **过滤**：元数据编码成 519k 位布尔掩码。可用集 ≤150k 时**精确打分**（memmap 上带掩码点积），超过则退回 HNSW 并自适应加深。
 
-```
-CN_Patent_RAG/
-├─ data/
-│  ├─ raw/patents_sample_500k.csv
-│  ├─ clean/patents.jsonl
-│  ├─ stats/clean_stats.json
-│  └─ index/                  # BGE-M3 向量 + HNSW 索引
-├─ scripts/
-│  ├─ inspect_patents.py      # 原始 CSV 体检
-│  ├─ clean_patents.py        # 清洗 + 统计
-│  ├─ check_clean.py          # 广告残留审计
-│  ├─ build_meta.py           # 紧凑元数据
-│  └─ build_index.py          # BGE-M3 编码 + HNSW
-├─ rag-app/
-│  ├─ pom.xml                 # Spring Boot 3.5 + LangChain4j 1.23
-│  └─ src/main/java/...       # AiServices / ChatMemory / SSE
-├─ service/
-│  ├─ app.py                  # FastAPI：/retrieve /verify
-│  └─ static/index.html       # 旧版 Python 问答页
-├─ eval/
-│  ├─ build_eval.py           # 60/150 题生成
-│  ├─ run_eval.py             # 检索 + 答案评测（支持消融）
-│  ├─ ablations.md            # 消融结果
-│  └─ README.md               # 指标口径与失败分析
-├─ docs/
-└─ README.md
-```
+### 效果（240 题，多选题 gold，候选深度 100）
 
-## 环境
+| 配置 | R@5 | R@10 | R@50 | MRR | nDCG@10 |
+|---|---:|---:|---:|---:|---:|
+| 纯向量 | 0.642 | 0.704 | 0.817 | 0.551 | 0.330 |
+| 纯 BM25 | 0.650 | 0.729 | 0.850 | 0.566 | 0.348 |
+| 混合 | 0.771 | 0.833 | 0.917 | 0.670 | 0.420 |
+| **混合 + 重排** | **0.887** | **0.921** | **0.946** | **0.828** | **0.512** |
 
-使用现有 conda 环境 `rag`（Python 3.11.18、torch 2.5.1+cu121、sentence-transformers 3.4.1、hnswlib）。
+混合相对纯向量 +12.9pt（CI [+0.083, +0.183]），加重排再 +11.6pt（CI [+0.188, +0.308]）。
+
+> 旧版仓库曾写“150 题 recall@5 0.85”。那批题由标题生成、gold 就是该专利，且没跑过 BM25 基线，**该数字已作废**，不要再引用。
+
+### 过滤
+
+| 过滤类型 | 可用条数(中位) | 旧空结果率 | 旧 recall@10 | 新 recall@10 |
+|---|---:|---:|---:|---:|
+| 城市+年份 | 107 | 41.0% | 0.328 | **1.000** |
+| IPC 部+年份 | 45,858 | 0% | 0.917 | **1.000** |
+| 专利类型 | 211,739 | 0% | 1.000 | 0.990 |
+
+旧做法是“取 HNSW 前 5000 条再丢弃不合格项”，窄过滤下 41% 直接返回空。
+
+### 对比题分解（planner）
+
+30 道非模板问法上，现有正则只认出 **10%**。但两篇 gold 都进 top5 的比例：拆解后 1.000，单查询也是 1.000。**也就是说这批题里“拆子查询”没有带来收益**，正则确实脆，但它不是瓶颈。
+
+## 生成与校验
+
+生成用 Qwen3-4B-Instruct q4（Ollama），prompt 要求“结论 / 明确相关 / 证据不充分”三段，正文只写 `[n]`。
+
+校验**不是语义判定**，是证据审计：
+
+| 指标 | 定义 |
+|---|---|
+| `citation_coverage` | 有 `[n]` 的句子 / 全部句子 |
+| `meta_rate` | 评价性元陈述（“未涉及/证据不充分”）/ 全部句子 |
+| `numeric_unsupported_rate` | 数值在被引摘要里找不到的句子 / 含数值的句子 |
+| `term_coverage` | 技术词在被引摘要中的命中率（均值） |
+| `grounded_rate` | 数值与术语都对齐的句子 / 非元陈述句子 |
+
+60 条答案、424 句：覆盖率 **0.542**，元陈述 0.165，数值无出处率 0.046，术语覆盖率均值 0.770，**grounded 0.435**。
+
+审计能指到具体 token：某条结论写“海藻糖（1%–20%）、BSA（0.5%–3%）、Tween-20（0.4%）”，被引摘要只有“1%‑20% 的海藻糖”，0.5%、3%、0.4% 三个数会被点名。
+
+**不能说的**：这套东西抓不到“用词都对、关系说反”；也不能证明答案语义正确。只证明“没发现无出处的具体信息”。
+
+> 为什么不用 LLM/NLI 判“语义是否支持”：做过 40 条人工校准，LLM kappa 0.05、NLI 0.20、reranker −0.08，口径歧义太大，已放弃。
+
+## 并发与延迟
+
+单卡 8GB，生成只跑一路（`RAG_MAX_CONCURRENT=1`），其余排队。
+
+| 并发 | TTFT p50/p95 | 总时延 p50/p95 |
+|---|---:|---:|
+| 1 | 1668 / 1892 ms | 7181 / 8152 ms |
+| 2 | 7324 / 8068 ms | 12164 / 12757 ms |
+| 4 | 10443 / 16772 ms | 15448 / 22195 ms |
+
+客户端断连后**不会立刻停止生成**，槽位靠 90 秒看门狗兜底释放（实测 9.1s 归零）。即时取消需要把流式链路改成 async 生成器，尚未做。
+
+## 已知缺陷
+
+- **只有摘要**：问不到权利要求、申请人、法律状态。
+- **B 层问题带 gold 稀有词生成**，对 BM25 有利；所以绝对分不能当真实用户水平，A 层（池化+校准）是平衡项。
+- **grounded 0.435 不等于“垃圾”**，它包含同义改写导致的术语漏配；但抽查的低分句确实有模型自行添加的细节（摘要只有“自动保压系统”，结论写“溢流阀……”）。
+- **断连不即时取消**（见上）。
+- **429 路径未实测**：排队上限 120s，压测最大排队 20s，没触发。
+- 语义级“引用是否支持结论”没有可信判定器，已从主指标移除。
+
+## 运行
 
 ```powershell
-conda activate rag
-pip install -r requirements.txt
-```
-
-模型：`D:\models\bge-m3`（BGE-M3，1024 维）。
-
-## 运行服务
-
-| 模块 | 端口 | 说明 |
-|---|---|---|
-| `rag-app` | 8080 | Spring Boot 3.5 + LangChain4j 应用层，Web/SSE |
-| `retrieval` | 8001 | Python FastAPI，BGE-M3 + bge-reranker + `/verify` |
-| Ollama | 11434 | Qwen3 生成 |
-
-### 1. Python 检索服务
-
-```powershell
-cd D:\Projects\CN_Patent_RAG
+# 1) 检索/审计服务
 python -m uvicorn service.app:app --host 127.0.0.1 --port 8001
-```
 
-### 2. Java 应用层
-
-需要 JDK 21 + Maven。
-
-```powershell
-cd D:\Projects\CN_Patent_RAG\rag-app
+# 2) Java 应用层（JDK 21 + Maven）
+cd rag-app
 mvn -DskipTests package
 java -jar target\rag-app-1.0.0.jar
-# 浏览器打开 http://127.0.0.1:8080/
+
+# 3) Ollama
+ollama serve
 ```
+
+环境变量：`RAG_MAX_CONCURRENT`、`RAG_QUEUE_TIMEOUT`、`RAG_HOLD_MAX`。
 
 接口：
 
 | 服务 | 接口 | 说明 |
 |---|---|---|
-| Java | `GET /` | Web 问答页（过滤 / 答案 / 引用 / 支撑校验） |
-| Java | `GET /api/chat?q=...&sessionId=...` | SSE：`sources` → `token`* → `verify` → `done` |
-| Java | `GET /api/health` | 健康检查 |
-| Python | `GET /retrieve?q=...` | 检索 + 过滤 + rerank |
-| Python | `POST /verify` | 逐句引用校验 |
-| Python | `GET /answer`、`/answer_stream` | 兼容旧链路 / 直接流式 |
-
-## 评测基线（150 题合成集，不做人工校验）
-
-检索 150 题；答案侧抽 18 题（详见 [eval/README.md](eval/README.md)、[eval/ablations.md](eval/ablations.md)）：
-
-| 指标 | 数值 |
-|---|---|
-| factoid recall@5 | 0.850（60 题） |
-| comparison all-gold / any-gold hit@5 | 0.860 / 1.000（50 题） |
-| factoid 引用命中 | 0.667（6 题） |
-| comparison 引用命中 | 1.000（6 题） |
-| 平均 faithfulness | 0.606（12 条可答题） |
-| 不可答拒答率 | 1.000（6 题） |
-| 平均端到端延迟 | ~10.9 s |
-
-> 合成题只由标题生成，同主题近邻专利无法区分，单 gold recall 是下界；未做人工校验，`faithfulness` 由同模型判定，仅作相对参考。答案侧仅 18 题，方差大（60 题子集为 0.868）。
-
-## 数据获取
-
-仓库不包含数据和索引。从 Hugging Face 下载
-[520,634 Chinese Patents Dataset](https://huggingface.co/datasets/LiuHongwei1992/520634PatentsDataset)
-的 `patents_sample_500k.csv`，放到 `data/raw/patents_sample_500k.csv`，再执行下面的清洗与建索引。
+| Java | `GET /api/chat?q=&sessionId=` | SSE：sources → token* → verify → done |
+| Python | `GET /retrieve` | 检索，支持 `mode=dense/bm25/hybrid` |
+| Python | `GET /retrieve_plan` | 对比题分解后检索 |
+| Python | `POST /verify` | 证据审计 |
+| Python | `GET /metrics` | 活跃/排队/拒绝计数 |
 
 ## 复现
 
 ```powershell
-# 0) 下载 CSV 到 data/raw/（见上）
-# 1) 清洗
 python scripts/clean_patents.py
-
-# 2) 冒烟建索引
-python scripts/build_index.py --limit 2000
-
-# 3) 全量建索引（约 60–75 分钟）
 python scripts/build_index.py
-
-# 4) 评测 150 题
-python eval/build_eval.py --factoid 60 --compare 50 --unans 40 --out eval/gold_150.jsonl
-python eval/run_eval.py --gold eval/gold_150.jsonl --answer-n 18 --tag 150
+python scripts/build_bm25.py
+python eval/run_eval_v1.py          # 240 题 B 层 + planner
+python eval/filter_eval.py          # 过滤对照
+python eval/audit_v2.py             # 证据审计
+python bench/load_test.py           # 并发
 ```
 
-## 设计要点
+## 目录
 
-- **向量索引**：对 52 万件专利摘要构建 BGE-M3 1024 维索引。
-- **元数据过滤**：IPC 部类/大类、年份区间、专利类型、城市，是过滤条件，不单独建索引。
-- **查询规划**：区分事实型 / 对比型 / 技术调研型 / 不可答；复杂问题拆成 1–3 个子查询，在同一索引上分别检索后聚合证据。
-- **引用校验**：生成结果按句绑定 `[n]`，先用 Qwen3 逐条判定“摘要是否明确支撑该结论”，失败时退回 cross-encoder 分数；低支撑结论标注，整体不可信时拒答。
-- **评测**：150 题合成集（60 factoid + 50 comparison + 40 unanswerable）；不做人工校验，指标含 recall@5、引用命中、faithfulness、拒答率、p95，均按下界解读。
+```
+service/            FastAPI：retrieval / bm25 / filters / verify / limits
+rag-app/            Spring Boot + LangChain4j
+scripts/            清洗、建稠密索引、建 BM25
+eval/               评测集、指标、报告（reports/v1）
+bench/              并发压测
+data/               原始、清洗、索引（不入库）
+```
 
 ## 硬件
 
-RTX 4060 Laptop 8GB / 16GB RAM。BGE-M3 索引约 2.1GB，编码约 50–65 分钟；服务常驻显存约 7GB（BGE-M3 + reranker + Qwen3-4B）。
+RTX 4060 Laptop 8GB / 16GB RAM。服务常驻显存约 7GB（BGE-M3 + reranker + 4B）。
