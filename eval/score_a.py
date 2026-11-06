@@ -7,10 +7,20 @@ Usage:
 import json
 import math
 import os
+import random
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANN = os.path.join(ROOT, "eval", "annotations")
 OUT = os.path.join(ROOT, "eval", "reports", "v1")
+
+
+def boot(vals, n=2000, seed=0):
+    if not vals:
+        return [0.0, 0.0]
+    rnd = random.Random(seed)
+    m = len(vals)
+    xs = sorted(sum(vals[rnd.randrange(m)] for _ in range(m)) / m for _ in range(n))
+    return [round(xs[int(0.025 * n)], 4), round(xs[int(0.975 * n)], 4)]
 
 
 def load(path):
@@ -74,7 +84,9 @@ def main():
         "pairs": len(pairs), "llm_labelled": len(labelled),
         "human_n": len(human),
         "nDCG@10_llm": round(sum(ndcgs) / len(ndcgs), 4) if ndcgs else None,
+        "nDCG@10_ci95": boot(ndcgs),
         "P@5_llm": round(sum(p5) / len(p5), 4) if p5 else None,
+        "P@5_ci95": boot(p5),
         "kappa_human_vs_llm": None if k is None else round(k, 4),
         "agreement": None if agree is None else round(agree, 4),
         "human_pos_rate": None if not both else round(sum(y for _, y in both) / len(both), 4),

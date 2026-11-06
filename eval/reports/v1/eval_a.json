@@ -2,13 +2,21 @@
   "summary": {
     "pairs": 895,
     "llm_labelled": 895,
-    "human_n": 0,
+    "human_n": 50,
     "nDCG@10_llm": 0.733,
+    "nDCG@10_ci95": [
+      0.6534,
+      0.8034
+    ],
     "P@5_llm": 0.3767,
-    "kappa_human_vs_llm": null,
-    "agreement": null,
-    "human_pos_rate": null,
-    "llm_pos_rate": null,
-    "rerank_threshold_acc": null
+    "P@5_ci95": [
+      0.3067,
+      0.45
+    ],
+    "kappa_human_vs_llm": 0.8,
+    "agreement": 0.9,
+    "human_pos_rate": 0.44,
+    "llm_pos_rate": 0.5,
+    "rerank_threshold_acc": 0.86
   }
 }
