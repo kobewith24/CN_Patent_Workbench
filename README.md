@@ -60,17 +60,15 @@
 
 混合相对纯向量 +12.9pt（CI [+0.083, +0.183]），加重排再 +11.6pt（CI [+0.188, +0.308]）。
 
-> 旧版仓库曾写“150 题 recall@5 0.85”。那批题由标题生成、gold 就是该专利，且没跑过 BM25 基线，**该数字已作废**，不要再引用。
-
 ### 过滤
 
-| 过滤类型 | 可用条数(中位) | 旧空结果率 | 旧 recall@10 | 新 recall@10 |
-|---|---:|---:|---:|---:|
-| 城市+年份 | 107 | 41.0% | 0.328 | **1.000** |
-| IPC 部+年份 | 45,858 | 0% | 0.917 | **1.000** |
-| 专利类型 | 211,739 | 0% | 1.000 | 0.990 |
+| 过滤类型 | 可用条数(中位) | 空结果率 | recall@10 | p50/p95 |
+|---|---:|---:|---:|---|
+| 城市+年份 | 107 | 0 | **1.000** | 25/48 ms |
+| IPC 部+年份 | 45,858 | 0 | **1.000** | 92/147 ms |
+| 专利类型 | 211,739 | 0 | 0.990 | 37/122 ms |
 
-旧做法是“取 HNSW 前 5000 条再丢弃不合格项”，窄过滤下 41% 直接返回空。
+过滤是 519k 位布尔掩码 + 子集精确打分。事后筛的写法（取 5000 条再丢弃不合格项）在窄条件下会直接返回空。
 
 ### 对比题分解（planner）
 
@@ -152,9 +150,9 @@ ollama serve
 python scripts/clean_patents.py
 python scripts/build_index.py
 python scripts/build_bm25.py
-python eval/run_eval_v1.py          # 240 题 B 层 + planner
+python eval/run_eval.py          # 240 题 B 层 + planner
 python eval/filter_eval.py          # 过滤对照
-python eval/audit_v2.py             # 证据审计
+python eval/audit.py             # 证据审计
 python bench/load_test.py           # 并发
 ```
 
@@ -164,7 +162,7 @@ python bench/load_test.py           # 并发
 service/            FastAPI：retrieval / bm25 / filters / verify / limits
 rag-app/            Spring Boot + LangChain4j
 scripts/            清洗、建稠密索引、建 BM25
-eval/               评测集、指标、报告（reports/v1）
+eval/               评测集、指标、报告（reports）
 bench/              并发压测
 data/               原始、清洗、索引（不入库）
 ```

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Generate answers for the A set and compare three citation verifiers.
 
-Each answer is split into claims (all sentences, v2 semantics). Every claim is
+Each answer is split into claims (all sentences as claims). Every claim is
 judged by: local LLM, Chinese NLI, and the reranker. A 40-claim stratified
 sample is written for human calibration.
 
@@ -29,7 +29,6 @@ OLLAMA = "http://127.0.0.1:11434"
 MODEL = "qwen3:4b-instruct-2507-q4_K_M"
 ANN = os.path.join(ROOT, "eval", "annotations")
 
-
 def generate(prompt, timeout=240):
     r = requests.post(OLLAMA + "/api/generate", json={
         "model": MODEL, "prompt": prompt, "stream": False, "think": False,
@@ -38,9 +37,8 @@ def generate(prompt, timeout=240):
     r.raise_for_status()
     return (r.json().get("response") or "").strip()
 
-
 def main():
-    items = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_v1_a.jsonl"), encoding="utf-8")]
+    items = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_a.jsonl"), encoding="utf-8")]
     os.makedirs(ANN, exist_ok=True)
     r = Retriever()
     try:
@@ -145,13 +143,12 @@ def main():
         for x in sample:
             f.write(json.dumps(x, ensure_ascii=False) + "\n")
 
-    outdir = os.path.join(ROOT, "eval", "reports", "v1")
+    outdir = os.path.join(ROOT, "eval", "reports")
     os.makedirs(outdir, exist_ok=True)
-    with open(os.path.join(outdir, "verify_v2.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(outdir, "verify.json"), "w", encoding="utf-8") as f:
         json.dump({"summary": summary, "sample_size": len(sample)}, f, ensure_ascii=False, indent=2)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     print("sample", len(sample), "pos", sum(1 for x in sample if x["llm"]), flush=True)
-
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@
 """Evidence audit over the already-generated claims (no regeneration, no human labels).
 
 Usage:
-    python eval/audit_v2.py
+    python eval/audit.py
 """
 import json
 import os
@@ -12,7 +12,6 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from service.verify import audit_claims  # noqa: E402
-
 
 def main():
     path = os.path.join(ROOT, "eval", "annotations", "claims_all.jsonl")
@@ -53,9 +52,9 @@ def main():
         "refs": c["refs"],
     } for c in missing_rows[:12]]
 
-    outdir = os.path.join(ROOT, "eval", "reports", "v1")
+    outdir = os.path.join(ROOT, "eval", "reports")
     os.makedirs(outdir, exist_ok=True)
-    with open(os.path.join(outdir, "audit_v2.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(outdir, "audit.json"), "w", encoding="utf-8") as f:
         json.dump({"summary": summary, "examples": examples}, f, ensure_ascii=False, indent=2)
 
     lines = ["# 证据审计（424 条 claim，无需人工）", "",
@@ -70,14 +69,13 @@ def main():
              "", "## 数值无出处样例", ""]
     for e in examples:
         lines.append("- `%s` 缺 %s：%s" % (e["qid"], e["missing"], e["claim"][:90]))
-    with open(os.path.join(outdir, "audit_v2.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(outdir, "audit.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
 
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     print("examples:")
     for e in examples[:6]:
         print(" ", e["qid"], e["missing"], e["claim"][:70])
-
 
 if __name__ == "__main__":
     main()

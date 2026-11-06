@@ -28,14 +28,12 @@ LABELS = {
     "hybrid_rerank": "hybrid + rerank",
 }
 
-
 def load_gold(path):
     rows = []
     with open(path, encoding="utf-8") as f:
         for line in f:
             rows.append(json.loads(line))
     return rows
-
 
 def build_id_map(meta_path):
     m = {}
@@ -45,13 +43,11 @@ def build_id_map(meta_path):
             m[doc_id] = i
     return m
 
-
 def first_rank(lst, gold):
     for i, lab in enumerate(lst, 1):
         if lab == gold:
             return i
     return None
-
 
 def boot_ci(deltas, n=2000, seed=0):
     if not deltas:
@@ -64,11 +60,10 @@ def boot_ci(deltas, n=2000, seed=0):
     vals.sort()
     return (vals[int(0.025 * n)], vals[int(0.975 * n)])
 
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gold", default=os.path.join(ROOT, "eval", "gold.jsonl"))
-    ap.add_argument("--out", default=os.path.join(ROOT, "eval", "reports", "v1"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "eval", "reports"))
     args = ap.parse_args()
 
     gold = load_gold(args.gold)
@@ -166,7 +161,7 @@ def main():
     with open(os.path.join(args.out, "baseline_60.json"), "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    lines = ["# 检索基线（60 题，v1）", "",
+    lines = ["# 检索基线（60 题）", "",
              "同一批题、同一批 top-50 候选，只换检索栈。", "",
              "| 配置 | R@5 | R@10 | R@50 | MRR | 对比 all@5 | 对比 any@5 | ΔR@5 vs dense [95% CI] |",
              "|---|---:|---:|---:|---:|---:|---:|---|"]
@@ -189,7 +184,6 @@ def main():
 
     print(json.dumps(metrics, ensure_ascii=False, indent=2))
     print("saved", args.out)
-
 
 if __name__ == "__main__":
     main()

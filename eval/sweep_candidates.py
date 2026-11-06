@@ -23,7 +23,6 @@ DEPTHS = [50, 100, 200]
 MODES = [("hybrid", False), ("hybrid_rerank", True)]
 WATCH = ["CN201510084776.0", "CN201510373239.8", "CN201520352400.9", "CN201520442192.1"]
 
-
 def boot_ci(deltas, n=2000, seed=0):
     if not deltas:
         return (0.0, 0.0)
@@ -34,7 +33,6 @@ def boot_ci(deltas, n=2000, seed=0):
         vals.append(sum(deltas[rnd.randrange(m)] for _ in range(m)) / m)
     vals.sort()
     return (vals[int(0.025 * n)], vals[int(0.975 * n)])
-
 
 def main():
     gold = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold.jsonl"), encoding="utf-8")]
@@ -93,7 +91,7 @@ def main():
 
     out = {"depths": DEPTHS, "n": len(gold), "summary": summary,
            "vs_hybrid@50": deltas, "watch_cases": watch}
-    outdir = os.path.join(ROOT, "eval", "reports", "v1")
+    outdir = os.path.join(ROOT, "eval", "reports")
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "sweep_candidates.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -123,7 +121,6 @@ def main():
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     print(json.dumps(watch, ensure_ascii=False))
     print("saved")
-
 
 if __name__ == "__main__":
     main()

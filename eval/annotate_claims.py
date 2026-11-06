@@ -20,12 +20,10 @@ LABELS = os.path.join(ROOT, "eval", "annotations", "claims_human_labels.jsonl")
 
 app = FastAPI()
 
-
 def load_pairs():
     if not os.path.exists(PAIRS):
         return []
     return [json.loads(line) for line in open(PAIRS, encoding="utf-8")]
-
 
 def load_done(path):
     done = {}
@@ -37,7 +35,6 @@ def load_done(path):
             except Exception:  # noqa: BLE001
                 pass
     return done
-
 
 PAGE = """<!doctype html>
 <html lang="zh"><head><meta charset="utf-8"><title>引用校验标注</title>
@@ -98,7 +95,6 @@ render();
 </script></body></html>
 """
 
-
 @app.get("/", response_class=HTMLResponse)
 def index():
     pairs = load_pairs()
@@ -108,7 +104,6 @@ def index():
     data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
     done_map = {("%s|%s" % (k[0], k[1])): v for k, v in done.items()}
     return PAGE.replace("__DATA__", data).replace("__DONE__", json.dumps(done_map))
-
 
 @app.post("/label")
 async def label(req: Request):
@@ -124,7 +119,6 @@ async def label(req: Request):
     except Exception as exc:  # noqa: BLE001
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
     return JSONResponse({"ok": True})
-
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

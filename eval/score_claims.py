@@ -5,14 +5,12 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANN = os.path.join(ROOT, "eval", "annotations")
-OUT = os.path.join(ROOT, "eval", "reports", "v1")
-
+OUT = os.path.join(ROOT, "eval", "reports")
 
 def load(path):
     if not os.path.exists(path):
         return []
     return [json.loads(line) for line in open(path, encoding="utf-8")]
-
 
 def kappa(a, b):
     n = len(a)
@@ -24,7 +22,6 @@ def kappa(a, b):
     pe = p1 * p2 + (1 - p1) * (1 - p2)
     return 0.0 if pe >= 1 else (po - pe) / (1 - pe)
 
-
 def auc(scores, labels):
     pos = [s for s, y in zip(scores, labels) if y == 1]
     neg = [s for s, y in zip(scores, labels) if y == 0]
@@ -32,7 +29,6 @@ def auc(scores, labels):
         return None
     wins = sum(1 for p in pos for n in neg if p > n) + 0.5 * sum(1 for p in pos for n in neg if p == n)
     return wins / (len(pos) * len(neg))
-
 
 def best_threshold(scores, labels):
     cands = sorted(set(scores))
@@ -43,7 +39,6 @@ def best_threshold(scores, labels):
         if acc > best[0]:
             best = (acc, t)
     return {"acc": round(best[0], 4), "threshold": round(best[1], 4)}
-
 
 def main():
     rows = load(os.path.join(ANN, "claims_all.jsonl"))
@@ -92,7 +87,6 @@ def main():
     with open(os.path.join(OUT, "verify_compare.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
     print(json.dumps(out, ensure_ascii=False, indent=2))
-
 
 if __name__ == "__main__":
     main()

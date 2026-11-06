@@ -11,8 +11,7 @@ import random
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANN = os.path.join(ROOT, "eval", "annotations")
-OUT = os.path.join(ROOT, "eval", "reports", "v1")
-
+OUT = os.path.join(ROOT, "eval", "reports")
 
 def boot(vals, n=2000, seed=0):
     if not vals:
@@ -22,12 +21,10 @@ def boot(vals, n=2000, seed=0):
     xs = sorted(sum(vals[rnd.randrange(m)] for _ in range(m)) / m for _ in range(n))
     return [round(xs[int(0.025 * n)], 4), round(xs[int(0.975 * n)], 4)]
 
-
 def load(path):
     if not os.path.exists(path):
         return []
     return [json.loads(line) for line in open(path, encoding="utf-8")]
-
 
 def kappa(a, b):
     n = len(a)
@@ -39,12 +36,10 @@ def kappa(a, b):
     pe = p1 * p2 + (1 - p1) * (1 - p2)
     return 0.0 if pe >= 1 else (po - pe) / (1 - pe)
 
-
 def ndcg(flags, ideal, k=10):
     dcg = sum(1.0 / math.log2(i + 2) for i, f in enumerate(flags[:k]) if f)
     idcg = sum(1.0 / math.log2(i + 2) for i in range(min(ideal, k)))
     return dcg / idcg if idcg else 0.0
-
 
 def main():
     pairs = load(os.path.join(ANN, "pairs_all.jsonl"))
@@ -111,7 +106,6 @@ def main():
     with open(os.path.join(OUT, "eval_a.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
-
 
 if __name__ == "__main__":
     main()

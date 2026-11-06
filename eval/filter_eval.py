@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Filtered retrieval: old post-filter vs mask + exact scoring.
 
-Ground truth = exact top-10 over the full eligible set. `old` is the v0
+Ground truth = exact top-10 over the full eligible set. `old` is the previous
 behaviour (HNSW top-5000 then drop). `new` is the production path
 (Retriever.search), which scores exactly when the eligible set is small and
 falls back to deeper HNSW when it is large.
@@ -24,16 +24,14 @@ from service.retrieval import Retriever  # noqa: E402
 
 N_Q = 40
 
-
 def pct(vals, p):
     if not vals:
         return 0
     s = sorted(vals)
     return s[min(len(s) - 1, int(p * len(s)))]
 
-
 def main():
-    gold = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_v1_b.jsonl"), encoding="utf-8")]
+    gold = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_b.jsonl"), encoding="utf-8")]
     random.seed(3)
     questions = random.sample([g["question"] for g in gold], min(N_Q, len(gold)))
 
@@ -96,7 +94,7 @@ def main():
         }
         print(name, json.dumps(out[name], ensure_ascii=False), flush=True)
 
-    outdir = os.path.join(ROOT, "eval", "reports", "v1")
+    outdir = os.path.join(ROOT, "eval", "reports")
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "filter_eval.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -115,7 +113,6 @@ def main():
     with open(os.path.join(outdir, "filter_eval.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(json.dumps(out, ensure_ascii=False, indent=2))
-
 
 if __name__ == "__main__":
     main()

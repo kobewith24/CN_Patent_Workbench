@@ -26,7 +26,6 @@ QUERIES = [
     "如何实现箱梁预应力钢束的高效布设？",
 ]
 
-
 def one(url, q, timeout=180):
     t0 = time.time()
     first = None
@@ -51,13 +50,11 @@ def one(url, q, timeout=180):
             "ttft": round(first * 1000, 1) if first is not None else None,
             "total": round((time.time() - t0) * 1000, 1)}
 
-
 def pct(vals, p):
     if not vals:
         return None
     s = sorted(vals)
     return round(s[min(len(s) - 1, int(p * len(s)))], 1)
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -118,7 +115,7 @@ def main():
     out = {"config": {k: before[k] for k in ("max_concurrent", "queue_timeout_s")},
            "levels": levels, "server": after}
 
-    outdir = os.path.join(ROOT, "eval", "reports", "v1")
+    outdir = os.path.join(ROOT, "eval", "reports")
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "concurrency.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -140,7 +137,6 @@ def main():
     with open(os.path.join(outdir, "concurrency.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(json.dumps(out, ensure_ascii=False, indent=2))
-
 
 if __name__ == "__main__":
     main()

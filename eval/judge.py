@@ -32,7 +32,6 @@ PROMPT = """判断下面这件专利能否回答该问题（部分回答也算�
 摘要：{abstract}
 """
 
-
 def judge(q, title, abstract):
     body = PROMPT.format(q=q, title=title, abstract=(abstract or "")[:600])
     try:
@@ -46,7 +45,6 @@ def judge(q, title, abstract):
         return 1 if int(data.get("r", 0)) == 1 else 0
     except Exception:  # noqa: BLE001
         return None
-
 
 def sample_pairs(pairs, n=50, seed=7):
     """Alternate positive/negative, one pair per question."""
@@ -84,7 +82,6 @@ def sample_pairs(pairs, n=50, seed=7):
                 used_q.add(p["qid"])
     return sample
 
-
 def write_sample(pairs):
     sample = sample_pairs(pairs)
     with open(os.path.join(OUTDIR, "pairs_human.jsonl"), "w", encoding="utf-8") as f:
@@ -93,7 +90,6 @@ def write_sample(pairs):
     print("sample=%d (pos=%d neg=%d)" % (
         len(sample), sum(1 for p in sample if p["llm"] == 1),
         sum(1 for p in sample if p["llm"] == 0)), flush=True)
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -106,7 +102,7 @@ def main():
         write_sample(pairs)
         return
 
-    items = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_v1_a.jsonl"), encoding="utf-8")]
+    items = [json.loads(line) for line in open(os.path.join(ROOT, "eval", "gold_a.jsonl"), encoding="utf-8")]
     print("A items", len(items), flush=True)
     r = Retriever()
 
@@ -151,7 +147,6 @@ def main():
             f.write(json.dumps(p, ensure_ascii=False) + "\n")
     write_sample(pairs)
     print("pairs=%d" % len(pairs), flush=True)
-
 
 if __name__ == "__main__":
     main()
