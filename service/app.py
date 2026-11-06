@@ -12,14 +12,12 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-import hnswlib
-import numpy as np
 import requests
-import torch
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
-from sentence_transformers import CrossEncoder, SentenceTransformer
+
+from .retrieval import EMPTY_FILTERS, Retriever
 
 ROOT = r"D:\Projects\CN_Patent_RAG"
 INDEX_PATH = os.path.join(ROOT, "data", "index", "patent_index_1024.bin")
@@ -90,51 +88,6 @@ class AnswerResponse(BaseModel):
     sources: list
 
 
-def _load_offsets(path):
-    offs = []
-    pos = 0
-    with open(path, "rb") as f:
-        for line in f:
-            offs.append(pos)
-            pos += len(line)
-    return offs
-
-
-def _read_metas(labels, offsets):
-    out = []
-    with open(META_PATH, "rb") as f:
-        for lab in labels:
-            f.seek(offsets[int(lab)])
-            out.append(json.loads(f.readline().decode("utf-8")))
-    return out
-
-
-def _read_fulls(metas):
-    out = []
-    with open(FULL_PATH, "rb") as f:
-        for m in metas:
-            f.seek(m["off"])
-            out.append(json.loads(f.readline().decode("utf-8")))
-    return out
-
-
-def _passes(m, f):
-    if f["ipc_section"] and m["ipc_section"] != f["ipc_section"]:
-        return False
-    if f["ipc_subclass"] and not m["ipc_subclass"].startswith(f["ipc_subclass"]):
-        return False
-    if f["year_from"] and m["year"] < f["year_from"]:
-        return False
-    if f["year_to"] and m["year"] > f["year_to"]:
-        return False
-    if f["patent_type"] and m["patent_type"] != f["patent_type"]:
-        return False
-    if f["applicant_type"] and f["applicant_type"] not in m["applicant_type"]:
-        return False
-    if f["city"] and f["city"] not in m["city"]:
-        return False
-    return True
-
 
 def _plan(q):
     """Heuristic decomposition for comparison questions."""
@@ -151,16 +104,6 @@ def _plan(q):
         return [m.group(1).strip(), m.group(2).strip()]
     return [q]
 
-
-def _bigram_sim(a, b):
-    """Character-bigram overlap, used as a light title-match rerank feature."""
-    a = re.sub(r"[^\u4e00-\u9fa5A-Za-z0-9]", "", a or "")
-    b = re.sub(r"[^\u4e00-\u9fa5A-Za-z0-9]", "", b or "")
-    if len(a) < 2 or len(b) < 2:
-        return 0.0
-    A = {a[i:i + 2] for i in range(len(a) - 1)}
-    B = {b[i:i + 2] for i in range(len(b) - 1)}
-    return len(A & B) / max(1, len(B))
 
 
 def _strip_filters(q, filters):
@@ -332,40 +275,16 @@ def _verify_answer(text, hits):
 
 def _load():
     t0 = time.time()
-    torch.set_num_threads(THREADS)
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA is required")
-
-    model = SentenceTransformer(MODEL_DIR, device="cuda")
-    model.max_seq_length = MAX_LEN
-    model.half()
-    torch.cuda.empty_cache()
-
-    try:
-        reranker = CrossEncoder(RERANKER_DIR, device="cuda")
-        reranker.model.half()
-        print("reranker loaded on cuda (fp16)", flush=True)
-    except Exception as exc:  # noqa: BLE001
-        reranker = None
-        print("reranker load failed: %s" % exc, flush=True)
-    torch.cuda.empty_cache()
-
-    index = hnswlib.Index(space="ip", dim=DIM)
-    index.load_index(INDEX_PATH)
-    index.set_ef(EF_SEARCH)
-
-    offsets = _load_offsets(META_PATH)
+    r = Retriever()
     STATE.update({
-        "model": model,
-        "reranker": reranker,
-        "index": index,
-        "offsets": offsets,
-        "device": str(model.device),
+        "retriever": r,
+        "reranker": r.reranker,
+        "device": str(r.model.device),
         "load_seconds": round(time.time() - t0, 1),
     })
-    print("service ready in %.1fs | docs=%d | device=%s | reranker=%s"
-          % (STATE["load_seconds"], index.get_current_count(), STATE["device"],
-             "cpu" if reranker is not None else "off"), flush=True)
+    print("service ready in %.1fs | docs=%d | device=%s | bm25=%s"
+          % (STATE["load_seconds"], r.index.get_current_count(),
+             STATE["device"], bool(r.bm25)), flush=True)
 
 
 @asynccontextmanager
@@ -386,13 +305,15 @@ def index():
 
 @app.get("/health")
 def health():
-    if "index" not in STATE:
+    r = STATE.get("retriever")
+    if r is None:
         return {"status": "loading"}
     return {
         "status": "ok",
-        "docs": STATE["index"].get_current_count(),
+        "docs": r.index.get_current_count(),
         "device": STATE["device"],
         "load_seconds": STATE["load_seconds"],
+        "bm25": bool(r.bm25),
     }
 
 
@@ -411,11 +332,13 @@ def retrieve(
     use_filters: bool = Query(True),
     use_rerank: bool = Query(True),
     use_title_boost: bool = Query(True),
+    use_bm25: bool = Query(True),
+    mode: str = Query(""),
 ):
-    if "index" not in STATE:
-        return {"query": q, "filters": {}, "scanned": 0, "elapsed_ms": 0, "hits": []}
+    r = STATE.get("retriever")
+    if r is None:
+        return RetrieveResponse(query=q, filters={}, scanned=0, elapsed_ms=0, hits=[])
 
-    t0 = time.time()
     filters = {
         "ipc_section": ipc_section.strip().upper(),
         "ipc_subclass": ipc_subclass.strip().upper(),
@@ -425,79 +348,20 @@ def retrieve(
         "city": city.strip(),
         "applicant_type": applicant_type.strip(),
     }
-    has_filter = any([
-        filters["ipc_section"], filters["ipc_subclass"], filters["year_from"],
-        filters["year_to"], filters["patent_type"], filters["city"],
-        filters["applicant_type"],
-    ])
+    if not use_filters:
+        filters = dict(EMPTY_FILTERS)
 
-    fetch_k = candidates if not has_filter else min(max(candidates * 20, 1000), 5000)
-    fetch_k = min(fetch_k, STATE["index"].get_current_count())
+    m = mode.strip().lower() or ("hybrid" if (use_bm25 and r.bm25 is not None) else "dense")
 
-    v = STATE["model"].encode([q], normalize_embeddings=True, convert_to_numpy=True)
-    v = np.asarray(v, dtype="float32")
-    labels, dists = STATE["index"].knn_query(v, k=fetch_k)
-
-    metas = _read_metas(labels[0], STATE["offsets"])
-    keep_n = min(max(k * 10, 30), 50)
-    kept = []
-    for lab, dist, m in zip(labels[0], dists[0], metas):
-        if (not use_filters) or _passes(m, filters):
-            kept.append((1.0 - float(dist), m))
-            if len(kept) >= keep_n:
-                break
-
-    fulls = _read_fulls([m for _, m in kept])
-    scores = None
-    reranker = STATE.get("reranker")
-    if use_rerank and reranker is not None and fulls:
-        try:
-            scores = reranker.predict(
-                [(q, rec["title"] + "\n" + rec["abstract"]) for rec in fulls],
-                batch_size=8,
-                show_progress_bar=False,
-            )
-        except Exception as exc:  # noqa: BLE001
-            print("rerank failed: %s" % exc, flush=True)
-            scores = None
-
-    if scores is not None:
-        final_scores = [
-            (0.9 * float(scores[i]) + 0.1 * _bigram_sim(q, fulls[i]["title"]))
-            if use_title_boost else float(scores[i])
-            for i in range(len(fulls))
-        ]
-        order = sorted(range(len(fulls)), key=lambda i: final_scores[i], reverse=True)[:k]
-    else:
-        final_scores = None
-        order = list(range(min(k, len(fulls))))
-
-    hits = []
-    for rank, idx in enumerate(order, 1):
-        m = kept[idx][1]
-        rec = fulls[idx]
-        score = final_scores[idx] if final_scores is not None else kept[idx][0]
-        hits.append(Hit(
-            rank=rank,
-            score=round(score, 4),
-            doc_id=m["doc_id"],
-            title=m["title"],
-            abstract=rec["abstract"],
-            ipc_main=m["ipc_main"],
-            ipc_section=m["ipc_section"],
-            ipc_subclass=m["ipc_subclass"],
-            year=m["year"],
-            patent_type=m["patent_type"],
-            applicant_type=m["applicant_type"],
-            city=m["city"],
-        ))
-
+    t0 = time.time()
+    rows, scanned = r.search(
+        q, k=k, candidates=candidates, filters=filters, mode=m,
+        rerank=use_rerank, title_boost=use_title_boost,
+    )
+    hits = [Hit(**row) for row in rows]
     return RetrieveResponse(
-        query=q,
-        filters=filters,
-        scanned=int(fetch_k),
-        elapsed_ms=round((time.time() - t0) * 1000, 1),
-        hits=hits,
+        query=q, filters=filters, scanned=scanned,
+        elapsed_ms=round((time.time() - t0) * 1000, 1), hits=hits,
     )
 
 
@@ -830,4 +694,4 @@ def get_trace(trace_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    uvicorn.run("service.app:app", host="127.0.0.1", port=8001)
