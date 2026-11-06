@@ -1,0 +1,35 @@
+{
+  "n_human": 40,
+  "human_pos": 33,
+  "llm": {
+    "n": 40,
+    "kappa": 0.05,
+    "acc": 0.525
+  },
+  "nli": {
+    "n": 40,
+    "kappa": 0.1979,
+    "acc": 0.625
+  },
+  "rr": {
+    "n": 40,
+    "kappa": -0.0843,
+    "acc": 0.775
+  },
+  "nli_score_auc": 0.6667,
+  "nli_score_best": {
+    "acc": 0.825,
+    "threshold": 0.0004
+  },
+  "rr_score_auc": 0.6861,
+  "rr_score_best": {
+    "acc": 0.825,
+    "threshold": 0.0014
+  },
+  "macro": {
+    "citation_coverage": 0.6179,
+    "llm_unsupported_rate": 0.7076,
+    "rr_unsupported_rate": 0.4344,
+    "nli_unsupported_rate": 0.6406
+  }
+}

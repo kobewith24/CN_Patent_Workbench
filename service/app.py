@@ -18,6 +18,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from .retrieval import EMPTY_FILTERS, Retriever
+from .verify import build_claims, judge_llm, summarize
 
 ROOT = r"D:\Projects\CN_Patent_RAG"
 INDEX_PATH = os.path.join(ROOT, "data", "index", "patent_index_1024.bin")
@@ -69,6 +70,8 @@ class VerifyRequest(BaseModel):
 class VerifyResponse(BaseModel):
     claims: list
     faithfulness: float
+    citation_coverage: float = -1.0
+    unsupported_rate: float = -1.0
 
 
 class AnswerResponse(BaseModel):
@@ -169,108 +172,20 @@ def _build_prompt(q, hits, sub_queries=None, filters=None):
     return "\n".join(lines)
 
 
-def _extract_claims(text, hits):
-    by_rank = {h.rank: h for h in hits}
-    claims = []
-    for sent in re.split(r"(?<=[。！？；\n])", text):
-        sent = sent.strip()
-        if not sent:
-            continue
-        refs = [int(x) for x in re.findall(r"\[(\d+)\]", sent)]
-        refs = [r for r in refs if r in by_rank]
-        if not refs:
-            continue
-        clean = re.sub(r"\[\d+\]", "", sent).strip()
-        if not clean:
-            continue
-        claims.append({"sentence": sent, "refs": refs, "clean": clean})
-    return claims, by_rank
-
-
-def _claim_out(c, support, supported, verified_by, reason=""):
-    return {
+def _verify_text(text, hits):
+    """v2: every sentence is a claim; uncited sentences count as unsupported."""
+    by_rank = {h.rank: {"abstract": h.abstract} for h in hits}
+    claims = judge_llm(build_claims(text, len(hits)), by_rank)
+    out = [{
         "sentence": c["sentence"],
         "refs": c["refs"],
-        "support": support,
-        "supported": supported,
-        "verified_by": verified_by,
-        "reason": reason,
-    }
+        "support": c.get("score", 0.0),
+        "supported": c["supported"],
+        "verified_by": c.get("by", "llm"),
+        "reason": c.get("reason", ""),
+    } for c in claims]
+    return out, summarize(claims)
 
-
-def _llm_judge(claims, by_rank):
-    """Ask the generator model to judge each claim against its cited abstracts."""
-    lines = [
-        "你是严格的引用校验器。逐条判断下面的结论是否能由它所引用的专利摘要直接支持。",
-        "判定标准：摘要必须明确包含结论所需的信息；仅有主题相关不算支持；否定/排除性表述也必须有摘要依据。",
-        '只输出 JSON，不要输出其他文字：{"results":[{"id":1,"supported":true,"reason":"..."}]}',
-        "",
-        "【结论与引用】",
-    ]
-    for i, c in enumerate(claims, 1):
-        lines.append("%d. 结论：%s" % (i, c["clean"]))
-        for r in c["refs"]:
-            lines.append("   引用[%d]：%s" % (r, by_rank[r].abstract[:300]))
-    prompt = "\n".join(lines)
-    try:
-        resp = requests.post(
-            OLLAMA_URL + "/api/generate",
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "think": False,
-                "format": "json",
-                "options": {"temperature": 0.0, "num_predict": 512, "num_ctx": 4096},
-            },
-            timeout=180,
-        )
-        resp.raise_for_status()
-        raw = (resp.json().get("response") or "").strip()
-        raw = re.sub(r"^```(?:json)?|```$", "", raw, flags=re.MULTILINE).strip()
-        data = json.loads(raw)
-        results = {int(x["id"]): x for x in data.get("results", [])}
-    except Exception as exc:  # noqa: BLE001
-        print("llm judge failed: %s" % exc, flush=True)
-        return None
-
-    out = []
-    for i, c in enumerate(claims, 1):
-        r = results.get(i)
-        if r is None:
-            out.append(_claim_out(c, 0.0, False, "llm", "judge_missing"))
-            continue
-        supported = bool(r.get("supported"))
-        out.append(_claim_out(c, 1.0 if supported else 0.0, supported,
-                              "llm", str(r.get("reason", ""))[:120]))
-    return out
-
-
-def _verify_reranker(claims, by_rank):
-    reranker = STATE.get("reranker")
-    if reranker is None:
-        return []
-    out = []
-    for c in claims:
-        pairs = [(c["clean"], by_rank[r].abstract) for r in c["refs"]]
-        try:
-            scores = reranker.predict(pairs, batch_size=8, show_progress_bar=False)
-            best = max(float(s) for s in scores)
-        except Exception as exc:  # noqa: BLE001
-            print("rerank verify failed: %s" % exc, flush=True)
-            continue
-        out.append(_claim_out(c, round(best, 4), best >= 0.5, "reranker"))
-    return out
-
-
-def _verify_answer(text, hits):
-    claims, by_rank = _extract_claims(text, hits)
-    if not claims:
-        return []
-    judged = _llm_judge(claims, by_rank)
-    if judged is not None:
-        return judged
-    return _verify_reranker(claims, by_rank)
 
 
 def _load():
@@ -426,10 +341,10 @@ def verify(req: VerifyRequest):
             continue
     if not hits:
         return VerifyResponse(claims=[], faithfulness=-1.0)
-    claims = _verify_answer(req.answer, hits)
-    supported = sum(1 for c in claims if c["supported"])
-    faithfulness = round(supported / len(claims), 4) if claims else -1.0
-    return VerifyResponse(claims=claims, faithfulness=faithfulness)
+    claims, stats = _verify_text(req.answer, hits)
+    return VerifyResponse(claims=claims, faithfulness=stats["support_rate"],
+                          citation_coverage=stats["citation_coverage"],
+                          unsupported_rate=stats["unsupported_rate"])
 
 
 def _write_trace(payload):
@@ -542,9 +457,8 @@ def answer(
                     if 1 <= int(x) <= len(hits)})
     uncited = [h.rank for h in hits if h.rank not in cited]
 
-    claims = _verify_answer(text, hits) if use_verify else []
-    supported = sum(1 for c in claims if c["supported"])
-    faithfulness = round(supported / len(claims), 4) if claims else -1.0
+    claims, vstats = _verify_text(text, hits) if use_verify else ([], None)
+    faithfulness = vstats["support_rate"] if vstats else -1.0
 
     elapsed = round((time.time() - t0) * 1000, 1)
     _write_trace({
@@ -659,9 +573,8 @@ def answer_stream(
             yield sse("error", {"message": str(exc)})
             return
 
-        claims = _verify_answer(text, hits)
-        supported = sum(1 for c in claims if c["supported"])
-        faithfulness = round(supported / len(claims), 4) if claims else -1.0
+        claims, vstats = _verify_text(text, hits)
+        faithfulness = vstats["support_rate"] if vstats else -1.0
         cited = sorted({int(x) for x in re.findall(r"\[(\d+)\]", text)
                         if 1 <= int(x) <= len(hits)})
         uncited = [h.rank for h in hits if h.rank not in cited]
