@@ -13,12 +13,15 @@ import torch
 from sentence_transformers import CrossEncoder, SentenceTransformer
 
 from .bm25 import BM25Index
+from .filters import MetaTable, exact_topk
 
 ROOT = r"D:\Projects\CN_Patent_RAG"
 INDEX_PATH = os.path.join(ROOT, "data", "index", "patent_index_1024.bin")
 META_PATH = os.path.join(ROOT, "data", "index", "meta_compact.jsonl")
 FULL_PATH = os.path.join(ROOT, "data", "clean", "patents.jsonl")
 BM25_PATH = os.path.join(ROOT, "data", "index", "bm25_fts5.db")
+EMB_PATH = os.path.join(ROOT, "data", "index", "patent_emb.npy")
+EXACT_MAX = 150000
 MODEL_DIR = r"D:\models\bge-m3"
 RERANKER_DIR = r"D:\models\bge-reranker-v2-m3"
 
@@ -101,6 +104,8 @@ class Retriever:
         self.index.load_index(INDEX_PATH)
         self.index.set_ef(EF_SEARCH)
         self.offsets = _load_offsets(META_PATH)
+        self.meta = MetaTable(META_PATH, self.index.get_current_count())
+        self.emb = np.load(EMB_PATH, mmap_mode="r")
 
         self.bm25 = None
         if with_bm25 and os.path.exists(BM25_PATH):
@@ -127,12 +132,39 @@ class Retriever:
         return out
 
     # ---------- retrieval ----------
-    def dense(self, q, fetch_k=50):
+    def encode(self, q):
         v = self.model.encode([q], normalize_embeddings=True, convert_to_numpy=True)
-        v = np.asarray(v, dtype="float32")
+        return np.asarray(v, dtype="float32")[0]
+
+    def dense_vec(self, v, fetch_k=50):
         k = min(int(fetch_k), self.index.get_current_count())
-        labels, dists = self.index.knn_query(v, k=k)
+        labels, dists = self.index.knn_query(v.reshape(1, -1), k=k)
         return [(int(lab), float(1.0 - dist)) for lab, dist in zip(labels[0], dists[0])]
+
+    def dense(self, q, fetch_k=50):
+        return self.dense_vec(self.encode(q), fetch_k)
+
+    def _hnsw_filtered(self, v, mask, want, cap=20000):
+        n = self.index.get_current_count()
+        fetch = 1000
+        kept = []
+        while True:
+            fetch = min(fetch, n)
+            labels, dists = self.index.knn_query(v.reshape(1, -1), k=fetch)
+            kept = [(int(l), float(1.0 - d)) for l, d in zip(labels[0], dists[0]) if mask[l]]
+            if len(kept) >= want or fetch >= cap or fetch >= n:
+                break
+            fetch *= 2
+        return kept[:want]
+
+    def _sparse_filtered(self, q, mask, want):
+        kept = []
+        for limit in (5000, 20000, 50000):
+            rows = self.sparse(q, limit)
+            kept = [(lab, sc) for lab, sc in rows if mask[lab]]
+            if len(kept) >= min(want, 100) or len(rows) < limit:
+                break
+        return kept[:want]
 
     def sparse(self, q, fetch_k=200):
         if self.bm25 is None:
@@ -168,30 +200,36 @@ class Retriever:
                rerank=True, title_boost=True):
         filters = dict(EMPTY_FILTERS, **(filters or {}))
         has_filter = any(filters[x] for x in FILTER_KEYS)
+        n = self.index.get_current_count()
 
-        fetch_k = candidates
         if has_filter:
+            mask = self.meta.mask(filters)
+            eligible = int(mask.sum())
+            if eligible == 0:
+                return [], 0
             fetch_k = min(max(candidates * 20, 1000), 5000)
-        fetch_k = min(int(fetch_k), self.index.get_current_count())
-
-        lists = []
-        if mode in ("dense", "hybrid"):
-            d = self.dense(q, fetch_k)
-            if has_filter and d:
-                metas = self._read_metas([lab for lab, _ in d])
-                d = [(lab, s) for (lab, s), m in zip(d, metas) if _passes(m, filters)]
-            lists.append(d)
-
-        if mode in ("bm25", "hybrid"):
-            k_sparse = max(fetch_k, 500) if has_filter else fetch_k
-            s = self.sparse(q, k_sparse)
-            if has_filter and s:
-                metas = self._read_metas([lab for lab, _ in s])
-                s = [(lab, sc) for (lab, sc), m in zip(s, metas) if _passes(m, filters)]
-            lists.append(s)
+            v = self.encode(q)
+            d = exact_topk(self.emb, v, mask, fetch_k) if eligible <= EXACT_MAX \
+                else self._hnsw_filtered(v, mask, candidates)
+            s = self._sparse_filtered(q, mask, max(candidates, 200)) \
+                if mode in ("bm25", "hybrid") else []
+            lists = []
+            if mode in ("dense", "hybrid"):
+                lists.append(d)
+            if mode in ("bm25", "hybrid"):
+                lists.append(s)
+            scanned = eligible
+        else:
+            fetch_k = min(int(candidates), n)
+            lists = []
+            if mode in ("dense", "hybrid"):
+                lists.append(self.dense(q, fetch_k))
+            if mode in ("bm25", "hybrid"):
+                lists.append(self.sparse(q, fetch_k))
+            scanned = fetch_k
 
         if not lists or not any(lists):
-            return [], 0
+            return [], scanned
 
         if mode == "hybrid":
             merged = self.rrf(lists, top=candidates)
@@ -220,4 +258,4 @@ class Retriever:
                 "applicant_type": m["applicant_type"],
                 "city": m["city"],
             })
-        return hits, fetch_k
+        return hits, scanned
