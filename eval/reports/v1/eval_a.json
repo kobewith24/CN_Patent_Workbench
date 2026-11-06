@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "pairs": 895,
+    "llm_labelled": 895,
+    "human_n": 0,
+    "nDCG@10_llm": 0.733,
+    "P@5_llm": 0.3767,
+    "kappa_human_vs_llm": null,
+    "agreement": null,
+    "human_pos_rate": null,
+    "llm_pos_rate": null,
+    "rerank_threshold_acc": null
+  }
+}
