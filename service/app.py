@@ -18,6 +18,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from .retrieval import EMPTY_FILTERS, Retriever
+from .limits import Busy, limited, slot, snapshot
 from .verify import audit_claims, build_claims
 
 ROOT = r"D:\Projects\CN_Patent_RAG"
@@ -237,6 +238,11 @@ def health():
     }
 
 
+@app.get("/metrics")
+def metrics():
+    return snapshot()
+
+
 @app.get("/retrieve", response_model=RetrieveResponse)
 def retrieve(
     q: str = Query(..., min_length=1),
@@ -258,6 +264,14 @@ def retrieve(
     r = STATE.get("retriever")
     if r is None:
         return RetrieveResponse(query=q, filters={}, scanned=0, elapsed_ms=0, hits=[])
+
+    # Called as a plain function from /answer and /answer_stream, the FastAPI
+    # defaults above are Query objects rather than values.
+    mode = mode if isinstance(mode, str) else ""
+    use_bm25 = use_bm25 if isinstance(use_bm25, bool) else True
+    use_filters = use_filters if isinstance(use_filters, bool) else True
+    use_rerank = use_rerank if isinstance(use_rerank, bool) else True
+    use_title_boost = use_title_boost if isinstance(use_title_boost, bool) else True
 
     filters = {
         "ipc_section": ipc_section.strip().upper(),
@@ -366,6 +380,7 @@ def _write_trace(payload):
 
 
 @app.get("/answer", response_model=AnswerResponse)
+@limited
 def answer(
     q: str = Query(..., min_length=1),
     k: int = Query(5, ge=1, le=10),
@@ -509,6 +524,13 @@ def answer_stream(
         return "event: %s\ndata: %s\n\n" % (event, json.dumps(data, ensure_ascii=False))
 
     def gen():
+        try:
+            with slot():
+                yield from _body()
+        except Busy:
+            yield sse("error", {"message": "server busy, retry later"})
+
+    def _body():
         t0 = time.time()
         trace_id = uuid.uuid4().hex[:12]
         sub_queries = _plan(q)

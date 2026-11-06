@@ -1,0 +1,54 @@
+{
+  "config": {
+    "max_concurrent": 1,
+    "queue_timeout_s": 120.0
+  },
+  "levels": {
+    "c1": {
+      "n": 4,
+      "ok": 4,
+      "429": 0,
+      "ttft_p50": 1668.0,
+      "ttft_p95": 1892.2,
+      "total_p50": 7181.1,
+      "total_p95": 8152.4,
+      "wall_s": 28.3
+    },
+    "c2": {
+      "n": 4,
+      "ok": 4,
+      "429": 0,
+      "ttft_p50": 7323.5,
+      "ttft_p95": 8068.2,
+      "total_p50": 12164.2,
+      "total_p95": 12757.1,
+      "wall_s": 23.6
+    },
+    "c4": {
+      "n": 4,
+      "ok": 4,
+      "429": 0,
+      "ttft_p50": 10443.1,
+      "ttft_p95": 16772.4,
+      "total_p50": 15448.2,
+      "total_p95": 22195.0,
+      "wall_s": 22.2
+    },
+    "cancel": {
+      "active_after_1s": 0,
+      "released_after_s": 9.1,
+      "forced_release": 1
+    }
+  },
+  "server": {
+    "max_concurrent": 1,
+    "queue_timeout_s": 120.0,
+    "hold_max_s": 20.0,
+    "active": 0,
+    "total": 14,
+    "rejected": 0,
+    "forced_release": 1,
+    "queue_ms_p50": 0.0,
+    "queue_ms_p95": 15440.0
+  }
+}
