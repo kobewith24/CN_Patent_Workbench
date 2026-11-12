@@ -16,3 +16,5 @@ config/local.json
 *.key
 *.db-wal
 *.db-shm
+/开发问题记录.md
+/面试.md
