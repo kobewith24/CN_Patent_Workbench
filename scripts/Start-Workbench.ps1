@@ -69,7 +69,7 @@ try {
         if(-not $processes.ContainsKey($name)){continue}
         $owned=Get-Process -Id $processes[$name] -ErrorAction SilentlyContinue
         if($owned -and $processes.start_times[$name]) {
-            $expected=[datetime]::Parse($processes.start_times[$name]).ToUniversalTime()
+            $expected=([DateTimeOffset]$processes.start_times[$name]).UtcDateTime
             if([Math]::Abs(($owned.StartTime.ToUniversalTime()-$expected).TotalSeconds) -lt 2){Stop-Process -Id $owned.Id -ErrorAction SilentlyContinue}
         }
     }

@@ -10,7 +10,7 @@ foreach($name in @('java','python','ollama')) {
     $process=Get-CimInstance Win32_Process -Filter "ProcessId=$processId" -ErrorAction SilentlyContinue
     if(-not $process){continue}
     if(-not $state.start_times.$name){Write-Warning "进程 $processId 缺少启动时间，拒绝仅凭 PID 停止";continue}
-    $expected=[datetime]::Parse($state.start_times.$name).ToUniversalTime()
+    $expected=([DateTimeOffset]$state.start_times.$name).UtcDateTime
     if([Math]::Abs(($process.CreationDate.ToUniversalTime()-$expected).TotalSeconds) -gt 2){Write-Warning "进程 $processId 已被复用，跳过";continue}
     $matches=($name -eq 'java' -and $process.CommandLine -like '*patent-workbench-2.0.0.jar*') -or
              ($name -eq 'python' -and $process.CommandLine -like '*uvicorn*retrieval.app:app*8002*') -or
