@@ -1,0 +1,366 @@
+[
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\.gitignore",
+    "Hash": "B02373C41ED865575E79E0B3F9BCC358816E62C53B36BAE10FE72A65D15A2995"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\开发问题记录.md",
+    "Hash": "3CF50CFB888EDCED4FB1C56843BF4BB9B646882EFE1097A2BCE122B16CCCEC80"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\面试.md",
+    "Hash": "87C0564AE2856053960D13689ED1613C3C8995C05220A0DE2F6B4A565564D1DA"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\专利技术情报问答 · LangChain4j.html",
+    "Hash": "C66B2D81AB8BE06BEB4F4D32E5986F54F770277640BACD95C982CC937AAE472E"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\LICENSE",
+    "Hash": "48586D6B71C99BAC440F297354255AFEEE1ACBF200BE3A96FF392F6BFC20736D"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\README.md",
+    "Hash": "8A82E15CB030C24E6DD7F34358D1E545A4CC40EB90FC485BE020DAD253DA5E41"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\requirements.txt",
+    "Hash": "CF626B3DE735ED445B8046502F20007E6E57660BE675098F521C35792B770433"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\bench\\load_test.py",
+    "Hash": "3FC9DB2DC4F96B11B4EA3704DCD119228933D4E1079C075BD37DAED024C9C7DA"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\ablations.md",
+    "Hash": "7A88D876097299584B4429AB6C02E148DF84D64BF12091F39B9776EB414498FF"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotate_claims.py",
+    "Hash": "44FFCD2B94D41E1E0C38BF9638EB142AC47D2D17D10CF77B9F6A4ADA766C8956"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotate.py",
+    "Hash": "15EB97DEE91E8D34F1F0018A6043314CF485BDD5833E61802320F80E9031799D"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\audit.py",
+    "Hash": "00AF6338EE4574CEF059293DDE8FCEF75BEB82FF2F175FE77B0F8FEC8C71FBD6"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\build_eval.py",
+    "Hash": "65FB22FFC3A8B59AFC688FC2FA91D331BEF2C1CBB0F54558215AE4E91A570767"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\eval_verify.py",
+    "Hash": "10A69E5B410E7D0FF3B5B6EF97619CBEACA26E0351638DB8F223B4402EA4FEB8"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\filter_eval.py",
+    "Hash": "13B7FEB47B6E13A30A8AF668B13FD27CF5CCCD6BCADA8B9E66EC5111ED2FCCD6"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\gold_a.jsonl",
+    "Hash": "2ED268C1CA31D91AEE180CC8D3C0249ACC15128847A4D5D530E4816B4A65DE13"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\gold_b.jsonl",
+    "Hash": "81288EF3A3F96406B5C5C3C82599DF8CA4285F218F9B62B259A19ADFA5B271A5"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\gold_planner.jsonl",
+    "Hash": "BD4D1598ED9895BAFE3C0769BAC3DE3EF5165D7392BF8E810D659170A9CF3DDE"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\gold.jsonl",
+    "Hash": "C5EFB235C3C4998FC004E962B6F170D93B0C4027E56D7BE27BE7B87D23D23E1C"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\hard_cases.json",
+    "Hash": "B1AAD408D8FAE44EB116068CE54EDCC8D6887E20D1DBB4171CE1664761B6B662"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\judge.py",
+    "Hash": "0A59AC78543A1EA3C7AB917B913A20DB805A43125BCFE02418C3D1866160E284"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\README.md",
+    "Hash": "FFA4514308914900A689E61D09B4392572B5203408D81B07C7B3ED2D986DA0AE"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report_150.json",
+    "Hash": "CBECA83C46B96E620CC5D8FFF3502E00D677D2AD474B14A3BF39783D7DD20D30"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report_no_multistep.json",
+    "Hash": "1FFC39626E10D8E0C5AD44AAEE7176BE7923B87B2643C77D7F34219CE1ACDD30"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report_no_rerank.json",
+    "Hash": "9D106ADF81AF17085B8D208BD643C28394DCD985DF7CF8749F6048833344D099"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report_no_title_boost.json",
+    "Hash": "F75E036D6FEFC5450BC2F24D3724576DB9BFF6847584D3E308FE062EB2C89C5F"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report_no_verify.json",
+    "Hash": "26D44C903BFFB949C0656B4B9068C34EF74E43D3101875682CF1C2E6B9028056"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\report.json",
+    "Hash": "5235D015A46C1437112646F5E5AFA049198BF46F4B44A568CA7A9712A06CE593"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\run_eval.py",
+    "Hash": "436B186675F70A7A1952569A1770874C34F5AB30C62A1398602EF514E340CBFB"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\run_retrieval.py",
+    "Hash": "4CBF41333878F63A84BF4DDB9439495BD7C166BBF7EFB35D66CCDD857CE2FB1B"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\score_a.py",
+    "Hash": "73019574536BB977EFA3870ECE87B57E23A80C6DC32ED771B3AEB7B2DFAD0D5C"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\score_claims.py",
+    "Hash": "A2DF0ABFABF3179389720F9E189BB086F5FE23A99524C6892717874A4AC48293"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\sweep_candidates.py",
+    "Hash": "1549329A2B2627AD4B13040397554B7ECE8C201A27314F20D54B79759951FE56"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\claims_all.jsonl",
+    "Hash": "67D7B97752DD9642C43F3C4D21360FE100ADEA38ECEE4A03111ECADE42BECA6E"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\claims_human_labels.jsonl",
+    "Hash": "C7F44DC7FAC7D89E8ACC2EF81DC15E61662C29DBA1144EE713A6FDFE75666E59"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\claims_human.jsonl",
+    "Hash": "E23A0914647739AB8BE18ABFEF2F6961570A16315518E7B736D94BEE80AE6B9E"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\human.jsonl",
+    "Hash": "C7B38FFCE7141A7221F951E272D079F6F63CC84AF37F8ECF17F312B70BBB6B54"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\pairs_all.jsonl",
+    "Hash": "116E96D2B24C2FCF0374907A9C9CFA502FE155CB724E021A559C49CF43F88F23"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\annotations\\pairs_human.jsonl",
+    "Hash": "CA517562E81D1506B570FE964A7069B0B66CC80DE63D888A72380245EFBE2452"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\ablation_rerank.md",
+    "Hash": "4DA931987532314D1B9756A907D7A7E4797E89B288DA1FA058D030631F1D0F83"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\audit.json",
+    "Hash": "75CFF8026F5E590DEA47D3AA0F268DCEC1971BCC3CD72CA153436312ADEF5B57"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\audit.md",
+    "Hash": "24CF13404F0EC71D2ADA127572BE30ED4007E75144F677554B43E6155178536F"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\baseline_60.json",
+    "Hash": "2CB14CEFDE484DDFBBB0A0BB7E46F4BF4EC9F5C18F4580524606711BB26F32DB"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\baseline_60.md",
+    "Hash": "FAD47315D94E266C0667F57EB4C3EDF1A82BCE191CC79E34929645D5F7B5DE30"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\concurrency.json",
+    "Hash": "F0992744DFDEE29603A21762FD570E0862C9C155D21952B7622429A1C2EC1E0F"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\concurrency.md",
+    "Hash": "869F266A2052F27694CEF0ECBAE0558A706A847946794264F313C4DE48E0731B"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\decision.md",
+    "Hash": "D2DC45A44990FFCCF0B874C3FA97ED73B2B2AFF0DCA3BE2B34A510DE4C0A764D"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\eval_a.json",
+    "Hash": "A53FCF559E26EA2558E94BA1878B9811E079C749C91696B92BCFF25615A51936"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\eval_a.md",
+    "Hash": "8218CAF96A411600752ACF306E0D18CD78224AA5FE490181AE3543AAC20886FB"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\eval.json",
+    "Hash": "86FB392E54AEEDABD3BEA3FD33B11EBCD9FA13973879EFDC30A42E3E561175C0"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\eval.md",
+    "Hash": "CA370C1BB7DC7CE52EBDCFD58550F26ECBE8CDE4C8D31BCE70C725BA3FBF3601"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\filter_eval.json",
+    "Hash": "420E7E6AA80387517E16059E01D979169C9EF50D1478AE737E3937FFEBBD6AD5"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\filter_eval.md",
+    "Hash": "41C4889779C1232B535DBB15ACD72DBCB919E8CC81C54366E012DED348692D0B"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\p3_decision.md",
+    "Hash": "5C3F76CB8FCFCFEF86479720A16C93DB5DE20A15F39861EDA34EBE3E98D9EA59"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\p5_decision.md",
+    "Hash": "E92F98DC3E141A0AA456F8671AA0B170B7BDE905DFF258DF7FAABDDE528110D4"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\sweep_candidates.json",
+    "Hash": "3EBC1F73DDB67E8856042CA061EE146293D50B13DC8719F218ECF7C15906C803"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\sweep_candidates.md",
+    "Hash": "1E3431B7CC95B3677C5CE9883EF912B711E1258FDAD5CF29A08A3E4FA8258A40"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\verify_compare.json",
+    "Hash": "C62FF370863BEA5FEAAA5B2122965B6906EE2A90305FAA77BD5B0E5F316E4F8D"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\verify.json",
+    "Hash": "6D025E9DBBF140A6920462B0D761E26DF9475E0CC989E725443A9FE6B1761504"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\eval\\reports\\verify.md",
+    "Hash": "1F633EF75F1D293E3DBEC03E69D893130F01C0C2DF7490798E70253E1ED9C1C4"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\pom.xml",
+    "Hash": "7ADE7D1EF02F2C7674292822CF06E5D5F6A98F0E1114A6E35812A44C0D14ADC7"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\RagApplication.java",
+    "Hash": "02B88C5A22634D1E2D822402AED9CB135B08AF27233D1A074E5A7DB2FF56ACF0"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\assistant\\PatentAssistant.java",
+    "Hash": "E04F2BA4263B03AC464890DA1D12C827C6CAC74AB660FDA7B90C13158C216C41"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\client\\RetrievalClient.java",
+    "Hash": "58EF539803F57322C516C29F2FA004AA8FE39FE0D10DA63EF6EB64EE6730D012"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\config\\LangChain4jConfig.java",
+    "Hash": "533A57FF7DD01BCF42C79B110BDA976A2D62E404EA6DE7A2134682837B058031"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\model\\Filters.java",
+    "Hash": "01F181B7C970079F9992A228676F8107FCE01399080D38C3D844154FE1513B60"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\model\\Hit.java",
+    "Hash": "8D17F98136738AC887464F94A94E67F6F6EAC352EB4E804F55461CD4A22838AB"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\model\\RetrieveResponse.java",
+    "Hash": "41533454F3F3252EED3285A5E8D48014036923F24263D69FE86B03383706F798"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\model\\VerifyRequest.java",
+    "Hash": "15242D80E863F99913D24C87A916485F3FE4556B26C4B345CC40BE4A9993F69E"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\model\\VerifyResponse.java",
+    "Hash": "FC110E2A734AB31E8FD29F23F79871EC4542DF7254575E335696E96251BEDF0F"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\service\\ChatService.java",
+    "Hash": "9F124DBFD2E2193A7F423F19B71EB6A2A7325B6FC14158456B1A6AB7FC68CB5E"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\java\\com\\patent\\rag\\web\\ChatController.java",
+    "Hash": "3934D819487E2F0E50686BECFE1E070AA60A1E0226B18741C0F207FC49374417"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\resources\\application.yml",
+    "Hash": "D2A277BBAD305114264C8A079F79E5EE0D7D8ED1E2AF4A148C0EB9BD5D3AED66"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\rag-app\\src\\main\\resources\\static\\index.html",
+    "Hash": "1EDEFEBE16B299459A29BB9AD0B5F470E7ED6021ABEE7EB49E3B6E0A8C275500"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\build_bm25.py",
+    "Hash": "3FC12FD3E9A2A160AFF48023C9F92EFAE1E571FD4C6C5410D5878A03DC79F100"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\build_index.py",
+    "Hash": "446B2BA3F0CB332A4C437540B5171B9C763F2D94BFFC6D8A50AD3082909D5B06"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\build_meta.py",
+    "Hash": "9B3DF71D88636F2172585C9AAA31D70091066D5EECA3C1B5B4ED804AD1106B18"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\check_clean.py",
+    "Hash": "26BA932C6F9529818C88009DB022C9F0D36587E03CDD7E5407E6F1D660309B88"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\clean_patents.py",
+    "Hash": "9DD8A609C2EF47786B0470CFC7A660864A488AC0ED3BE61A41433CFC163629E4"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\inspect_patents.py",
+    "Hash": "9C4DCC065254AC94EC0A9A43CAE1F73457874BA90663C403BF047AA3D187D4B0"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\search_full.py",
+    "Hash": "1BF8D02303272DA5259EC02F21DE7E1D5A78B4DE200BFFA14A1C6DC0EACD3D58"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\scripts\\smoke_search.py",
+    "Hash": "E112BFE6B4A61FD9336E0ABDE3115EE6DAC0C92AFEA3FF4D404810AA60952A5D"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\__init__.py",
+    "Hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\app.py",
+    "Hash": "5FF2CAC1F839670B89AEC7A2B1EE7482B46B44D8CBAC1C131937AB126ED70BE8"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\bm25.py",
+    "Hash": "C8C1109B0901FD6D3C3D0AE4744499D1225AF136299C626DA8868D91C553B451"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\filters.py",
+    "Hash": "21661425B6E888D2FC782B26D9B1C69B72B47B68CD051964991079839E70820F"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\limits.py",
+    "Hash": "4F180038C790C16F1385D4EABC9639AC6C22221FE0EB2C2B9EB1E29E2417583B"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\retrieval.py",
+    "Hash": "567D27BB28BA9B764F63A7A33219CE4C1B187D8C41E8C3D63BE21CEBDEB89424"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\text.py",
+    "Hash": "C0D721A236BA48A2BFF44DB4137C73D5628CF4E1240FBE55B586B8D407016C94"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\verify.py",
+    "Hash": "180AF657DA139EEA0D6F9C03FE8B89B1C5A8C9636E3B050B9C63164263B51852"
+  },
+  {
+    "Path": "D:\\Projects\\CN_Patent_RAG\\service\\static\\index.html",
+    "Hash": "4F1D30929EB13D615E8DF23681A7563BB712580862D7C5E7E1298FE68B537A83"
+  }
+]

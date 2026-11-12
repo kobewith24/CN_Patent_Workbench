@@ -1,0 +1,37 @@
+{
+  "time": "2026-11-12T06:56:16.374859+00:00",
+  "original_source_files_checked": 91,
+  "original_source_changed": [],
+  "assets": [
+    {
+      "file": "clean\\patents.jsonl",
+      "bytes": 1002603432,
+      "sha256": "151e40aa43080757d54377d8c1c585fb3176b245ce8486ff60b591ac177f0413"
+    },
+    {
+      "file": "index\\bm25_fts5.db",
+      "bytes": 1136758784,
+      "sha256": "7251db4b8df2f2bbcfc0c13c45f2f7d7dac1c0ba5a9d24228191fb6e06286084"
+    },
+    {
+      "file": "index\\index_meta.json",
+      "bytes": 361,
+      "sha256": "2a546c9fae96c50d394effc421a596489a11f1cff61a2e365411a25ed06f9d79"
+    },
+    {
+      "file": "index\\meta_compact.jsonl",
+      "bytes": 139580818,
+      "sha256": "48229445152a0250ff4ad07ff6a9a842f9caf8bb10d9a783b1add7835dde34aa"
+    },
+    {
+      "file": "index\\patent_emb.npy",
+      "bytes": 2127560832,
+      "sha256": "a6913ba924f53331baa8ce92c3173fbb65700095d848fe7be5314dc844f4b6e1"
+    },
+    {
+      "file": "index\\patent_index_1024.bin",
+      "bytes": 2271051168,
+      "sha256": "4c4eddfee92590600b5fa458d391522180195244dfa6231efbcf26d10bcc34c6"
+    }
+  ]
+}

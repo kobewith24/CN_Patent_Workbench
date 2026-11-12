@@ -1,0 +1,20 @@
+test_astral_characters_keep_codepoint_offsets (test_evidence.EvidenceTests.test_astral_characters_keep_codepoint_offsets) ... ok
+test_exact_original_slices_and_stable_ids (test_evidence.EvidenceTests.test_exact_original_slices_and_stable_ids) ... ok
+test_grouping_preserves_applications (test_evidence.EvidenceTests.test_grouping_preserves_applications) ... ok
+test_invalid_and_cross_document_references_blocked (test_evidence.EvidenceTests.test_invalid_and_cross_document_references_blocked) ... ok
+test_missing_document_identity_is_not_a_valid_claim (test_evidence.EvidenceTests.test_missing_document_identity_is_not_a_valid_claim) ... ok
+test_range_dashes_are_not_negative_values (test_evidence.EvidenceTests.test_range_dashes_are_not_negative_values) ... ok
+test_small_counts_are_not_skipped (test_evidence.EvidenceTests.test_small_counts_are_not_skipped) ... ok
+test_units_must_match (test_evidence.EvidenceTests.test_units_must_match) ... ok
+test_valid_reference_does_not_claim_semantic_verification (test_evidence.EvidenceTests.test_valid_reference_does_not_claim_semantic_verification) ... ok
+test_zero_and_percentage (test_evidence.EvidenceTests.test_zero_and_percentage) ... ok
+test_inconsistent_conditions_are_rejected (test_filters.FilterContractTests.test_inconsistent_conditions_are_rejected) ... ok
+test_missing_reranker_is_explicit_failure (test_filters.FilterContractTests.test_missing_reranker_is_explicit_failure) ... ok
+test_unknown_hard_condition_is_not_ignored (test_filters.FilterContractTests.test_unknown_hard_condition_is_not_ignored) ... ok
+test_duplicate_results_do_not_inflate_recall (test_metrics.MetricsTests.test_duplicate_results_do_not_inflate_recall) ... ok
+test_one_of_four_is_hit_not_full_recall (test_metrics.MetricsTests.test_one_of_four_is_hit_not_full_recall) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.001s
+
+OK

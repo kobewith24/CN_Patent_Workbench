@@ -1,0 +1,32 @@
+{
+  "source": "D:\\Projects\\CN_Patent_Workbench\\eval\\legacy_rankings.json",
+  "n": 240,
+  "gold_definition": "legacy synthetic rare-term clusters; not independently judged relevance",
+  "new_system_measurement": false,
+  "configs": {
+    "dense": {
+      "Hit@5": 0.641667,
+      "Recall@5": 0.279611,
+      "Precision@5": 0.166667,
+      "nDCG@5": 0.322635
+    },
+    "bm25": {
+      "Hit@5": 0.65,
+      "Recall@5": 0.287792,
+      "Precision@5": 0.174167,
+      "nDCG@5": 0.338751
+    },
+    "hybrid": {
+      "Hit@5": 0.770833,
+      "Recall@5": 0.346848,
+      "Precision@5": 0.210833,
+      "nDCG@5": 0.40531
+    },
+    "hybrid_rerank": {
+      "Hit@5": 0.8875,
+      "Recall@5": 0.413845,
+      "Precision@5": 0.249167,
+      "nDCG@5": 0.502746
+    }
+  }
+}

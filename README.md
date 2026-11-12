@@ -1,172 +1,144 @@
-# 面向专利技术情报的检索增强问答与引用审计
+# 知证 · 专利技术调研工作台
 
-52 万件中文专利摘要 → BM25 + 向量混合检索 → Qwen3-4B 生成 → 逐句引用 + 证据审计。
+在本地专利摘要样本中检索技术方案，选择候选进行带原文证据的比较，保存调研备注并导出报告。
 
-这个仓库的定位是**把检索和度量做扎实**，不是再包一个聊天框。所有对外数字都标了口径和样本量，测不出来的东西不写。
+应用层为 **Java 21 / Spring Boot 3.5.16 / LangChain4j 1.23.0**；检索层为 Python / BM25 / BGE-M3 / RRF / reranker；业务记录存储于独立 SQLite 数据库。
 
-## 关键数字
+## 从 GitHub 获取后
 
-| 指标 | 值 | 口径 |
-|---|---:|---|
-| hybrid + rerank recall@5 | **0.887** | 240 题，多选题 gold |
-| 相对纯向量提升 | **+24.6pt** | 95% CI [+0.188, +0.308] |
-| 引用覆盖率 | **0.542** | 60 条答案、424 句 |
-| 数值无出处率 | **0.046** | 22 条含数值的已引用结论 |
-| 窄过滤空结果率 | **0**（旧 41%） | 城市+年份，40 题 |
-| 单路生成延迟 | 7.2 s / TTFT 1.7 s | 4060 Laptop 8GB |
+仓库提供源码、测试、评测题和验证记录；语料索引、模型权重、访问令牌、个人调研数据库及运行日志不随代码发布。当前版本没有数据下载或索引重建的一键流程。
 
-## 架构
+首次运行需要 Python 3.11、带 CUDA 的 PyTorch、Java 21、Maven 和 Ollama，并根据 `requirements.txt` 安装 Python 依赖。检索服务当前要求 CUDA，默认配置面向 RTX 4060 Laptop 8GB。
 
-```
-浏览器
-  → Spring Boot 3.5 + LangChain4j（8080）
-      ├─ ChatMemory 多轮 / 查询改写
-      ├─ 调 Python /retrieve（BM25 + dense + RRF + rerank + 过滤）
-      ├─ Ollama 流式生成（Qwen3-4B q4）
-      └─ 调 Python /verify（证据审计）
-  → Python FastAPI（8001）：检索、审计、指标
+另外准备一套**同一版本、行号一致**的已清洗语料与索引，放在 `assets/corpus/`：
+
+```text
+clean/patents.jsonl
+index/bm25_fts5.db
+index/index_meta.json
+index/meta_compact.jsonl
+index/patent_emb.npy
+index/patent_index_1024.bin
 ```
 
-## 数据
+这六个文件在本机约 6.22 GiB。单独替换其中一个可能使索引行号与摘要错配，需要整套更新；外部语料和模型的使用条件以各自来源为准。BGE-M3、reranker 路径及 Ollama 模型名称在 `config/workbench.json` 中配置，启动脚本的 Java/Python 路径可用 `-Java` / `-Python` 参数覆盖。
 
-| 项 | 数值 |
-|---|---|
-| 原始 / 清洗后 | 520,634 / 519,424 |
-| 年份 | 2015–2024 |
-| 摘要长度 | 均值 260.9，P95 304，最大 720 |
-| 专利类型 | 实用新型 251,326；发明申请 211,739；发明授权 56,359 |
-| IPC 缺失 | 20,585（约 4%） |
+![工作台界面](reports/interface.jpg)
 
-**只有摘要，没有权利要求、说明书、申请人名称。** 所以“保护范围 / 侵权 / 某公司专利布局”这类问题不可答，这不是模型问题，是数据边界。
+## 使用
 
-## 检索
-
-三层：稀疏 + 稠密 + 重排。
-
-- **稀疏**：SQLite FTS5 上建 BM25（磁盘索引 1.08GB）。分词是 jieba 搜索模式 + 中文 2/3-gram + 英文数字整串保留——`FXa`、`G06T` 这类不会被切碎，`双酰胺基` 这种词也能被 2-gram 兜住。
-- **稠密**：BGE-M3 1024 维，hnswlib HNSW（2.1GB）。
-- **融合**：RRF(k=60)，两路各取 top-100。
-- **重排**：bge-reranker-v2-m3，融合后取 100 条候选。
-- **过滤**：元数据编码成 519k 位布尔掩码。可用集 ≤150k 时**精确打分**（memmap 上带掩码点积），超过则退回 HNSW 并自适应加深。
-
-### 效果（240 题，多选题 gold，候选深度 100）
-
-| 配置 | R@5 | R@10 | R@50 | MRR | nDCG@10 |
-|---|---:|---:|---:|---:|---:|
-| 纯向量 | 0.642 | 0.704 | 0.817 | 0.551 | 0.330 |
-| 纯 BM25 | 0.650 | 0.729 | 0.850 | 0.566 | 0.348 |
-| 混合 | 0.771 | 0.833 | 0.917 | 0.670 | 0.420 |
-| **混合 + 重排** | **0.887** | **0.921** | **0.946** | **0.828** | **0.512** |
-
-混合相对纯向量 +12.9pt（CI [+0.083, +0.183]），加重排再 +11.6pt（CI [+0.188, +0.308]）。
-
-### 过滤
-
-| 过滤类型 | 可用条数(中位) | 空结果率 | recall@10 | p50/p95 |
-|---|---:|---:|---:|---|
-| 城市+年份 | 107 | 0 | **1.000** | 25/48 ms |
-| IPC 部+年份 | 45,858 | 0 | **1.000** | 92/147 ms |
-| 专利类型 | 211,739 | 0 | 0.990 | 37/122 ms |
-
-过滤是 519k 位布尔掩码 + 子集精确打分。事后筛的写法（取 5000 条再丢弃不合格项）在窄条件下会直接返回空。
-
-### 对比题分解（planner）
-
-30 道非模板问法上，现有正则只认出 **10%**。但两篇 gold 都进 top5 的比例：拆解后 1.000，单查询也是 1.000。**也就是说这批题里“拆子查询”没有带来收益**，正则确实脆，但它不是瓶颈。
-
-## 生成与校验
-
-生成用 Qwen3-4B-Instruct q4（Ollama），prompt 要求“结论 / 明确相关 / 证据不充分”三段，正文只写 `[n]`。
-
-校验**不是语义判定**，是证据审计：
-
-| 指标 | 定义 |
-|---|---|
-| `citation_coverage` | 有 `[n]` 的句子 / 全部句子 |
-| `meta_rate` | 评价性元陈述（“未涉及/证据不充分”）/ 全部句子 |
-| `numeric_unsupported_rate` | 数值在被引摘要里找不到的句子 / 含数值的句子 |
-| `term_coverage` | 技术词在被引摘要中的命中率（均值） |
-| `grounded_rate` | 数值与术语都对齐的句子 / 非元陈述句子 |
-
-60 条答案、424 句：覆盖率 **0.542**，元陈述 0.165，数值无出处率 0.046，术语覆盖率均值 0.770，**grounded 0.435**。
-
-审计能指到具体 token：某条结论写“海藻糖（1%–20%）、BSA（0.5%–3%）、Tween-20（0.4%）”，被引摘要只有“1%‑20% 的海藻糖”，0.5%、3%、0.4% 三个数会被点名。
-
-**不能说的**：这套东西抓不到“用词都对、关系说反”；也不能证明答案语义正确。只证明“没发现无出处的具体信息”。
-
-> 为什么不用 LLM/NLI 判“语义是否支持”：做过 40 条人工校准，LLM kappa 0.05、NLI 0.20、reranker −0.08，口径歧义太大，已放弃。
-
-## 并发与延迟
-
-单卡 8GB，生成只跑一路（`RAG_MAX_CONCURRENT=1`），其余排队。
-
-| 并发 | TTFT p50/p95 | 总时延 p50/p95 |
-|---|---:|---:|
-| 1 | 1668 / 1892 ms | 7181 / 8152 ms |
-| 2 | 7324 / 8068 ms | 12164 / 12757 ms |
-| 4 | 10443 / 16772 ms | 15448 / 22195 ms |
-
-客户端断连后**不会立刻停止生成**，槽位靠 90 秒看门狗兜底释放（实测 9.1s 归零）。即时取消需要把流式链路改成 async 生成器，尚未做。
-
-## 已知缺陷
-
-- **只有摘要**：问不到权利要求、申请人、法律状态。
-- **B 层问题带 gold 稀有词生成**，对 BM25 有利；所以绝对分不能当真实用户水平，A 层（池化+校准）是平衡项。
-- **grounded 0.435 不等于“垃圾”**，它包含同义改写导致的术语漏配；但抽查的低分句确实有模型自行添加的细节（摘要只有“自动保压系统”，结论写“溢流阀……”）。
-- **断连不即时取消**（见上）。
-- **429 路径未实测**：排队上限 120s，压测最大排队 20s，没触发。
-- 语义级“引用是否支持结论”没有可信判定器，已从主指标移除。
-
-## 运行
+在项目根目录运行：
 
 ```powershell
-# 1) 检索/审计服务
-python -m uvicorn service.app:app --host 127.0.0.1 --port 8001
-
-# 2) Java 应用层（JDK 21 + Maven）
-cd rag-app
-mvn -DskipTests package
-java -jar target\rag-app-1.0.0.jar
-
-# 3) Ollama
-ollama serve
+.\scripts\Start-Workbench.ps1 -OpenBrowser
 ```
 
-环境变量：`RAG_MAX_CONCURRENT`、`RAG_QUEUE_TIMEOUT`、`RAG_HOLD_MAX`。
+启动脚本默认使用本机现有环境：
 
-接口：
+- Java：`D:\Java\jdk-21\bin\java.exe`
+- Python：`D:\Anaconda\envs\rag\python.exe`
+- Ollama：PATH 中的 `ollama`，模型 `qwen3:4b-instruct-2507-q4_K_M`
+- BGE 模型：`D:\models\bge-m3` 与 `D:\models\bge-reranker-v2-m3`
 
-| 服务 | 接口 | 说明 |
-|---|---|---|
-| Java | `GET /api/chat?q=&sessionId=` | SSE：sources → token* → verify → done |
-| Python | `GET /retrieve` | 检索，支持 `mode=dense/bm25/hybrid` |
-| Python | `GET /retrieve_plan` | 对比题分解后检索 |
-| Python | `POST /verify` | 证据审计 |
-| Python | `GET /metrics` | 活跃/排队/拒绝计数 |
+默认访问 `http://127.0.0.1:8088`，检索服务位于 `127.0.0.1:8002`。脚本只绑定本机地址；`-OpenBrowser` 使用本地 URL fragment 完成访问令牌传递，页面随即清除 fragment。直接打开页面时，令牌位于 `data/access.token`。
 
-## 复现
+停止本项目启动的服务：
 
 ```powershell
-python scripts/clean_patents.py
-python scripts/build_index.py
-python scripts/build_bm25.py
-python eval/run_eval.py          # 240 题 B 层 + planner
-python eval/filter_eval.py          # 过滤对照
-python eval/audit.py             # 证据审计
-python bench/load_test.py           # 并发
+.\scripts\Stop-Workbench.ps1
 ```
+
+修改 Java 或页面资源后，先停止服务，再执行：
+
+```powershell
+.\scripts\Start-Workbench.ps1 -Build -OpenBrowser
+```
+
+## 一次完整调研
+
+1. 新建调研并修改标题，例如“低照度图像增强与降噪技术调研”。
+2. 输入具体技术问题，设置 IPC、年份、城市等条件，检索候选。条件不会自动放宽。
+3. 勾选候选。勾选会保存到本次调研的候选清单；在清单中添加备注。
+4. 选择 2–4 件专利生成技术对照，或选择 1–6 件归纳方案。可在分析问题中限定比较维度。
+5. 点击结论下的“查看原文证据”，查看完整摘要和高亮片段。
+6. 查看待复核内容。数值、单位或引用未通过检查的内容不进入正式结论。
+7. 导出 Markdown 调研报告或 CSV 候选清单。重启后使用同一浏览器可继续之前的调研。
+
+侧栏每项调研都有删除按钮，删除前会确认范围；有排队、生成或核验任务时拒绝删除。删除会同时移除该调研的候选、备注与分析记录，原始专利语料保留。
+
+“结合上次检索”会经过同一模型队列生成独立查询，继承的是界面中明确设置的过滤条件。专利选择与筛选状态独立保存，模型无权自行改写硬条件。
+
+## 数据和证据边界
+
+- 当前语料为 **2015–2024 年、519,424 条中文专利摘要样本**，不是全国专利全集。
+- 不含完整说明书、权利要求、申请人名称和法律状态，不作侵权、新颖性或保护范围判断。
+- `assets/corpus/` 是从原项目复制的运行数据；应用不会写入该目录，也不再依赖原项目目录运行。原始 CSV、旧模型训练文件不是运行依赖。
+- 模型权重继续使用本机已有目录，具体位置见 `config/workbench.json`。
+- 证据由程序对摘要切片生成，编号包含申请号、摘要哈希值与原文位置；位置按 Unicode code point 计数。
+- 审计重新读取规范摘要，核验引用归属和数值/单位。**原文已定位不等于语义蕴含，关系、否定、因果和技术适用性仍需复核。**
+- 字符串规则不执行单位换算，也不证明实体—数值关系正确；合法的换算可能进入待复核区。
+
+## 架构和运行控制
+
+```text
+浏览器 → Spring Boot :8088
+           ├─ 调研 / 工作区 / 候选 / 备注 / 导出 → SQLite
+           ├─ 显式上下文 + LangChain4j → Ollama :11434
+           └─ 只读检索、证据与审计 → Python :8002 → assets/corpus
+```
+
+Java 是唯一运行时模型调用入口。默认生成并发 1、队列容量 4、排队上限 45 秒、生成上限 120 秒，可通过共享配置调整。SSE 推送阶段和审计后的结果；前端不将未审计 token 当作正式结论。
+
+Ollama 的模型级 Flow 接口在本项目固定版本中不可用；`CancellableTransport` 将回调适配到 JDK HTTP 流订阅，使首 token 前也能取消客户端请求。取消属于传输侧 best effort，不能仅靠应用计数断言 GPU 已即时停止。
+
+重启时未完成任务标记为 `interrupted`，不会擅自续跑。失败记录保留已取得的摘要。队列满返回 429，超时与取消都有明确终态。
+
+## 保存与访问
+
+- 业务数据库：`data/workbench.db`，启用 WAL 与外键。
+- 共享访问令牌：`data/access.token`；内部服务令牌：`data/internal.token`。
+- 每个浏览器工作区另有随机凭据，数据库仅保存密钥散列。所有调研与任务读取都校验工作区归属。
+- 浏览器本地保存访问令牌和工作区凭据。此版本面向可信本机使用，提供工作区隔离，不提供企业 SSO 或多租户账号体系。
+- 备份数据库前停止服务，备份整个 `data/`，同时妥善保留浏览器工作区凭据。清除浏览器存储后，新工作区不会自动取得旧工作区访问权。
+- 运行进程与日志仅位于本项目 `data/`、`logs/`。共享配置不含秘密，不应将 `data/` 或 `assets/` 提交到 Git。
+
+## 验证与评测
+
+```powershell
+# 程序级证据、数值和检索指标检查
+D:\Anaconda\envs\rag\python.exe -m unittest discover -s tests -v
+
+# Java 集成测试：鉴权、隔离、保存恢复、队列满、取消、无效引用拦截
+mvn -f app/pom.xml test
+
+# 对真实 Java -> Python -> Ollama 链路验收；会创建单独的验收工作区
+D:\Anaconda\envs\rag\python.exe scripts/run_acceptance.py
+
+# 对真实 Java 入口进行闭环短分析压测
+D:\Anaconda\envs\rag\python.exe scripts/load_test.py --requests 100 --concurrency 1,2,4
+
+# 纠正旧系统保存结果的指标口径（不是新系统质量测量）
+D:\Anaconda\envs\rag\python.exe eval/recompute_legacy.py
+```
+
+`eval/acceptance_cases.jsonl` 是独立编写的需求式验收题，记录出题方式；`eval/build_review_pool.py` 可导出候选与待标注相关性。未完成相关性审阅前，不生成该题集的质量分数。
+
+旧合成回归集的 `Hit@5` 与多 gold `Recall@5` 明确分开。现有排序缓存的复算保存在 `reports/legacy-metrics-corrected.json`，不能作为新工作台的效果提升宣称。
+
+实际执行过的测试、样本量和性能边界以 `reports/VALIDATION.md` 为准，不承诺所有机器或真实流量下都达到同一延迟。
 
 ## 目录
 
-```
-service/            FastAPI：retrieval / bm25 / filters / verify / limits
-rag-app/            Spring Boot + LangChain4j
-scripts/            清洗、建稠密索引、建 BM25
-eval/               评测集、指标、报告（reports）
-bench/              并发压测
-data/               原始、清洗、索引（不入库）
+```text
+app/           Java 应用、页面、集成测试及可执行 JAR
+retrieval/     只读混合检索、过滤、证据切分与规则审计
+config/        两端共享的运行配置
+assets/corpus/ 独立复制的运行数据和索引（不入库）
+data/          本项目状态、令牌、数据库与进程记录（不入库）
+scripts/       启停、真实链路验收与压测
+eval/          指标实现、旧结果对照、需求式验收题与相关性标注池
+reports/       实际验证结果与限制说明
+docs/          API 和设计决策
 ```
 
-## 硬件
-
-RTX 4060 Laptop 8GB / 16GB RAM。服务常驻显存约 7GB（BGE-M3 + reranker + 4B）。
+检索模块由原 CN_Patent_RAG 项目演进，保留原 MIT LICENSE。语料与模型的使用条件以各自来源为准，本项目不声明对这些外部资产的再分发权。

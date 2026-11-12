@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>知证 · 专利技术调研</title><link rel="stylesheet" href="/app.css?v=study-delete"><script src="/app.js?v=study-delete" defer></script></head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><span class="brand-symbol">知</span><div>知证<small>PATENT RESEARCH</small></div></div>
+  <div class="sidebar-caption">调研工作区</div><button id="new-study" class="new-study">＋ 新建技术调研</button>
+  <nav id="studies" aria-label="调研列表"></nav>
+  <div class="sidebar-bottom"><span class="live-dot"></span><span id="connection">正在连接本地服务</span><button id="logout" class="text-button">锁定</button></div>
+</aside>
+<main>
+  <header class="topbar"><span>我的工作区 <span class="slash">/</span> 技术调研</span><div class="top-actions"><button id="export-md" class="quiet">导出调研报告</button><button id="export-csv" class="quiet">导出候选清单</button></div></header>
+  <section class="heading"><div><div class="eyebrow">RESEARCH WORKSPACE</div><input id="study-title" aria-label="调研标题" value="技术方案调研" maxlength="120"><p>从候选专利到技术对照，每项结论都附上可复查的摘要原文。</p></div><span id="saved-status" class="save-status">本地保存</span></section>
+  <div class="scope"><span class="scope-label">语料范围</span><span id="scope-text">中文专利摘要样本 · 2015–2024 · 技术初筛用途</span></div>
+  <section class="search-panel">
+    <label for="query" class="field-label">描述你要研究的技术问题</label>
+    <div class="search-line"><input id="query" maxlength="1000" placeholder="例如：低照度场景下，减少运动模糊的图像处理方案"><button id="search" class="primary">检索专利 <span>↗</span></button></div>
+    <div class="filters">
+      <label>起始年份<input id="year-from" type="number" min="2015" max="2024" placeholder="不限"></label>
+      <label>结束年份<input id="year-to" type="number" min="2015" max="2024" placeholder="不限"></label>
+      <label>IPC 部类<select id="ipc"><option value="">全部</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></label>
+      <label>IPC 小类<input id="subclass" placeholder="如 G06T" maxlength="4"></label>
+      <label>专利类型<select id="patent-type"><option value="">全部类型</option><option>发明申请</option><option>发明授权</option><option>实用新型</option></select></label>
+      <label>申请人城市<input id="city" placeholder="如 深圳市" maxlength="40"></label>
+    </div>
+    <div class="search-footer"><label class="check-label"><input id="follow-up" type="checkbox">结合上次检索理解本次追问</label><span id="search-meta">筛选条件不会自动放宽</span></div>
+  </section>
+  <div id="notice" class="notice hidden" role="status"></div>
+  <div class="work-area">
+    <section class="content-column">
+      <div class="tabs" role="tablist"><button data-tab="results" class="active" role="tab">检索结果 <span id="result-count">0</span></button><button data-tab="saved" role="tab">候选清单 <span id="saved-count">0</span></button><button data-tab="analysis" role="tab">技术分析</button><button data-tab="history" role="tab">分析记录</button></div>
+      <div id="results" class="tab-panel"></div><div id="saved" class="tab-panel hidden"></div><div id="analysis" class="tab-panel hidden"></div><div id="history" class="tab-panel hidden"></div>
+    </section>
+    <aside class="selection-panel"><div class="eyebrow">EVIDENCE DESK</div><h2>待分析专利 <span id="selection-count">0</span></h2><p class="muted">选择 2–4 件进行比较，或最多 6 件归纳技术方案。</p><div id="selection"></div><label for="analysis-question" class="field-label">分析问题</label><textarea id="analysis-question" rows="4" maxlength="1000">比较技术问题、实现方法和关键组成，说明各自的摘要依据。</textarea><button id="compare" class="primary wide">生成技术对照</button><button id="overview" class="quiet wide">归纳所选技术方案</button><div id="job-status" class="job-status hidden" aria-live="polite"></div><button id="cancel" class="danger wide hidden">停止本次分析</button><p class="small muted">仅依据摘要。未披露的信息标记为无法判断，结论使用前请复核原文。</p></aside>
+  </div>
+  <footer>知证 · 研发前期技术初筛 <span>分析记录与备注保存在本机</span></footer>
+</main>
+<dialog id="access-dialog"><form id="access-form"><div class="eyebrow">LOCAL WORKSPACE</div><h2>连接你的调研工作区</h2><p>输入本机项目 <code>data/access.token</code> 中的访问令牌。工作区凭据将保存在当前浏览器。</p><label class="field-label" for="access-token">访问令牌</label><input id="access-token" type="password" autocomplete="off" required><button class="primary wide" type="submit">连接工作区</button><div id="access-error" class="form-error" role="alert"></div></form></dialog>
+<dialog id="document-dialog"><div class="dialog-toolbar"><span>摘要与原文证据</span><button id="close-document" class="quiet">关闭 ✕</button></div><div id="document-content"></div></dialog>
+<dialog id="delete-study-dialog" aria-labelledby="delete-study-title"><h2 id="delete-study-title">删除这个调研？</h2><p>将删除调研「<strong id="delete-study-name"></strong>」及其候选清单、备注和分析记录。此操作无法撤销。</p><p>原始专利语料会保留。</p><div id="delete-study-error" class="form-error" role="alert"></div><div class="delete-dialog-actions"><button id="cancel-delete-study" class="quiet" type="button">取消</button><button id="confirm-delete-study" class="delete-confirm" type="button">确认删除</button></div></dialog>
+</body></html>
